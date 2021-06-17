@@ -43,7 +43,8 @@ class Constrained3DKernelMinimal(Constraint):
        """
 
         # return self.__constraint_positive_surrounding_weights(w)
-        return self.__constraint_derrick_et_al_with_reshape()
+        # return self.__constraint_derrick_et_al_with_transpose(w)
+        return self.__constraint_derrick_et_al_with_reshape(w)
 
     def get_config(self):
         return {}
@@ -146,8 +147,8 @@ class Constrained3DKernelMinimal(Constraint):
 
 def __create_model(input_shape):
     model = Sequential([
-        Conv2D(filters=3, kernel_size=5, strides=(1, 1), input_shape=input_shape, padding='same',
-               kernel_initializer=tf.keras.initializers.RandomUniform(minval=0, maxval=1),
+        Conv2D(filters=3, kernel_size=5, strides=(1, 1), input_shape=input_shape, padding='valid',
+               kernel_initializer=tf.keras.initializers.RandomUniform(minval=0.0001, maxval=1, seed=108),
                kernel_constraint=Constrained3DKernelMinimal(),
                name="constrained_layer"),
         Flatten(),

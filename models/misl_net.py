@@ -16,13 +16,15 @@ class MISLNet(BaseNet):
         model = Sequential()
 
         if self.constrained_net:
-            cons_layer = Conv2D(filters=self.constrained_n_filters,
-                                kernel_size=self.constrained_kernel_size,
-                                strides=(1, 1),
-                                input_shape=input_shape,
-                                padding="valid",  # Intentionally
-                                kernel_constraint=Constrained3DKernelMinimal(),
-                                name="constrained_layer")
+            cons_layer = Conv2D(
+                filters=self.constrained_n_filters,
+                kernel_size=self.constrained_kernel_size,
+                strides=(1, 1),
+                input_shape=input_shape,
+                padding="valid",  # Intentionally
+                kernel_constraint=Constrained3DKernelMinimal(),
+                kernel_initializer=tf.keras.initializers.RandomUniform(minval=0.0001, maxval=1, seed=108),
+                name="constrained_layer")
             model.add(cons_layer)
 
         # Determine whether to use the input shape parameter

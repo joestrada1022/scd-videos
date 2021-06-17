@@ -127,7 +127,8 @@ class EfficientNetWrapper(tf.keras.Model):
         if self.is_constrained:
             self.conv0 = tf.keras.layers.Conv2D(
                 filters=3, kernel_size=5, strides=(1, 1), padding="valid",
-                kernel_constraint=Constrained3DKernelMinimal(), name="constrained_layer"
+                kernel_constraint=Constrained3DKernelMinimal(), name="constrained_layer",
+                kernel_initializer=tf.keras.initializers.RandomUniform(minval=0.0001, maxval=1, seed=108)
             )
         self.conv1 = tf.keras.layers.Conv2D(filters=round_filters(32, width_coefficient),
                                             kernel_size=(3, 3),
