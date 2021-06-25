@@ -239,7 +239,7 @@ class MobileNetV3SmallWrapper(MobileNetBase):
         super(MobileNetV3SmallWrapper, self).__init__(shape, n_class, alpha)
         self.include_top = include_top
 
-    def build(self, is_constrained=False):
+    def build(self, is_constrained=False, const_type=None):
         """build MobileNetV3 Small.
 
         # Arguments
@@ -248,12 +248,15 @@ class MobileNetV3SmallWrapper(MobileNetBase):
         # Returns
             model: Model, model.
         """
+        channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+
         inputs = Input(shape=self.shape)
         if is_constrained:
             x = Conv2D(filters=3, kernel_size=5, strides=(1, 1), padding="valid",
                        kernel_initializer=tf.keras.initializers.RandomUniform(minval=0.0001, maxval=1, seed=108),
-                       kernel_constraint=Constrained3DKernelMinimal(),
+                       kernel_constraint=Constrained3DKernelMinimal(const_type),
                        name="constrained_layer")(inputs)
+            x = BatchNormalization(axis=channel_axis)(x)
             x = self._conv_block(x, 16, (3, 3), strides=(2, 2), nl='HS')
         else:
             x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
@@ -287,8 +290,9 @@ class MobileNetV3SmallWrapper(MobileNetBase):
 
 
 class MobileNet(BaseNet):
-    def __init__(self, constrained_net, num_batches, global_results_dir, model_path=None):
+    def __init__(self, constrained_net, num_batches, global_results_dir, const_type='bug', model_path=None):
         super().__init__(constrained_net, num_batches, global_results_dir, model_path)
+        self.const_type = const_type
 
     def set_model(self, model_path):
         # Path is e.g. ~/constrained_net/fm-e00001.h5
@@ -300,7 +304,7 @@ class MobileNet(BaseNet):
 
         # noinspection PyProtectedMember
         self.model = tf.keras.models.load_model(model_path, custom_objects={
-            'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
+            'Constrained3DKernelMinimal': Constrained3DKernelMinimal(self.const_type),
             '_hard_swish': MobileNetBase._hard_swish,
             '_relu6': MobileNetBase._relu6})
 
@@ -310,7 +314,7 @@ class MobileNet(BaseNet):
     def create_model(self, num_output, height=480, width=800, model_name=None):
         input_shape = (height, width, 3)
         net = MobileNetV3SmallWrapper(shape=input_shape, n_class=num_output)
-        model = net.build(is_constrained=self.constrained_net)
+        model = net.build(is_constrained=self.constrained_net, const_type=self.const_type)
         self.model_name = model_name
         self.model = model
         self.compile()

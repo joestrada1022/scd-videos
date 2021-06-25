@@ -1,53 +1,10 @@
 import shutil
 from pathlib import Path
 
-import matplotlib
-import numpy as np
 from matplotlib import pyplot as plt
 
 
-def make_individual_plot(plots):
-    plt.figure(dpi=300)
-    matplotlib.rcParams.update({'font.size': 10})
-    axes = plt.gca()
-
-    for plot_name in plots:
-        if plots[plot_name].exists():
-            with open(plots[plot_name], 'r') as f:
-                lines = sorted(f.readlines()[2:])
-            test_loss = [float(x.split(',')[3]) for x in lines]
-            test_acc = [float(x.split(',')[1]) for x in lines]
-            max_acc_index = np.argmax(test_acc)
-            test_loss = test_loss[:max_acc_index + 4]
-            test_acc = test_acc[:max_acc_index + 4]
-            epochs = list(range(1, len(test_loss) + 1))
-
-            plt.plot(epochs, test_acc, label=plot_name)
-            color = plt.gca().lines[-1].get_color()
-            plt.scatter(max_acc_index + 1, test_acc[max_acc_index], color=color)
-
-    plt.xlabel('epochs')
-
-    plt.title('Epoch-wise accuracy on test data')
-    plt.ylabel('accuracy')
-    axes.set_ylim([0.40, 0.74])
-
-    # plt.title('Epoch-wise loss on test data')
-    # plt.ylabel('loss')
-    # axes.set_ylim([0.218, 0.31])
-
-    axes.set_xlim([0, 30])
-
-    plt.legend()
-    plt.tight_layout()
-
-    plt.show()
-    plt.cla()
-    plt.clf()
-    plt.close()
-
-
-def make_combined_plots_horizontal(plots):
+def make_combined_plots_horizontal(plots, replace_string='50_frames_pred'):
     plt.figure()
     fig, axs = plt.subplots(2, 1, figsize=(6, 5), dpi=300, sharex=True)
 
@@ -79,7 +36,7 @@ def make_combined_plots_horizontal(plots):
 
             model_path = list(plots[plot_name].parent.parent.parent.glob(f'*{str(index + 1).zfill(5)}.h5'))[0]
             tmp = list(model_path.parts)[:-1]
-            tmp[-4] = '50_frames_pred'
+            tmp[-4] = replace_string
             dest_path = Path('/'.join(tmp))
             dest_path.mkdir(exist_ok=True, parents=True)
             shutil.copy(model_path, dest_path)
@@ -152,51 +109,7 @@ def make_combined_plots_horizontal(plots):
     plt.close()
 
 
-def make_combined_plot(plots):
-    plt.figure(dpi=300)
-    matplotlib.rcParams.update({'font.size': 10})
-    axes = plt.gca()
-
-    for plot_name in plots:
-        if plots[plot_name].exists():
-            with open(plots[plot_name], 'r') as f:
-                lines = sorted(f.readlines()[2:])
-            test_loss = [float(x.split(',')[3]) for x in lines]
-            test_acc = [float(x.split(',')[1]) for x in lines]
-            max_acc_index = np.argmax(test_acc)
-            test_loss = test_loss[:max_acc_index + 4]
-            test_acc = test_acc[:max_acc_index + 4]
-            epochs = list(range(1, len(test_loss) + 1))
-
-            plt.plot(epochs, test_acc, label=plot_name)
-            color = plt.gca().lines[-1].get_color()
-            plt.scatter(max_acc_index + 1, test_acc[max_acc_index], color=color)
-            plt.plot(epochs, test_loss, linestyle='--', color=color)
-            plt.scatter(max_acc_index + 1, test_loss[max_acc_index], color=color)
-
-    plt.xlabel('epochs')
-
-    plt.title('Epoch-wise loss/accuracy on test data')
-    plt.ylabel('loss/accuracy')
-    # axes.set_ylim([0.40, 0.74])
-
-    # plt.title('Epoch-wise loss on test data')
-    # plt.ylabel('loss')
-    # axes.set_ylim([0.218, 0.31])
-
-    axes.set_xlim([0, 30])
-
-    plt.legend()
-    plt.tight_layout()
-
-    plt.show()
-    plt.cla()
-    plt.clf()
-    plt.close()
-
-
 if __name__ == '__main__':
-
     # plot_data = {
     #     'MISLNet': Path(
     #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/misl_net_2/models/ConvNet/'
@@ -221,14 +134,14 @@ if __name__ == '__main__':
 
     plot_data = {
         'MobileNet - Constrained': Path(
-            r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/mobile_net_fixed_lr/models/ConstNet_guru/'
-            r'predictions_50_frames_val/videos/V_prediction_stats.csv'),
+            r'/scratch/p288722/runtime_data/scd-videos/dev_const_layer/50_frames_28d_128/mobile_net/models/'
+            r'ConstNet_guru/predictions_50_frames_val/videos/V_prediction_stats.csv'),
     }
-    make_combined_plots_horizontal(plot_data)
+    make_combined_plots_horizontal(plot_data, replace_string='50_frames_28d_128_pred')
 
     plot_data = {
         'MobileNet - Constrained': Path(
-            r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/mobile_net_fixed_lr1/models/ConstNet_guru/'
-            r'predictions_50_frames_val/videos/V_prediction_stats.csv'),
+            r'/scratch/p288722/runtime_data/scd-videos/dev_const_layer/50_frames_28d_64/mobile_net/models/'
+            r'ConstNet_guru/predictions_50_frames_val/videos/V_prediction_stats.csv'),
     }
-    make_combined_plots_horizontal(plot_data)
+    make_combined_plots_horizontal(plot_data, replace_string='50_frames_28d_64_pred')

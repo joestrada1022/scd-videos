@@ -207,7 +207,7 @@ class WarmUpCosineDecayScheduler(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.verbose > 0:
-            print(f'\nEpoch %05d: end learning rate - %s.' % (epoch + 1, self.learning_rates[-1]))
+            print(f'\nEpoch %d:    lr rate - %.6f' % (epoch + 1, self.learning_rates[-1]), flush=True)
 
 
 if __name__ == '__main__':

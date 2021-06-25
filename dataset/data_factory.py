@@ -121,13 +121,15 @@ class DataFactory:
         num_batches = math.ceil(num_elements / self.batch_size)
         return labeled_ds, num_batches
 
-    def __get_tf_evaluation_data(self, category, mode):
+    def get_tf_evaluation_data(self, category, mode):
         t_start = time.time()
 
         if mode == 'test':
             file_path_ds = tf.data.Dataset.from_tensor_slices(self.test_data)
         elif mode == 'val':
             file_path_ds = tf.data.Dataset.from_tensor_slices(self.val_data)
+        elif mode == 'train':
+            file_path_ds = tf.data.Dataset.from_tensor_slices(self.train_data)
         else:
             raise ValueError('Invalid mode')
 
@@ -156,10 +158,10 @@ class DataFactory:
         return filename_ds, labeled_ds
 
     def get_tf_val_data(self, category):
-        return self.__get_tf_evaluation_data(category, mode='val')
+        return self.get_tf_evaluation_data(category, mode='val')
 
     def get_tf_test_data(self, category):
-        return self.__get_tf_evaluation_data(category, mode='test')
+        return self.get_tf_evaluation_data(category, mode='test')
 
     @staticmethod
     def get_labels(ds):

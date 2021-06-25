@@ -12,6 +12,10 @@ from tensorflow.keras.utils import to_categorical
 
 
 class Constrained3DKernelMinimal(Constraint):
+    def __init__(self, const_type='guru'):
+        super(Constrained3DKernelMinimal, self).__init__()
+        self.const_type = const_type
+
     def __call__(self, w):
         """
         =========================================================================================
@@ -41,10 +45,14 @@ class Constrained3DKernelMinimal(Constraint):
 
         This means there are 3 filters in total with each filter being 3-dimensional.
        """
-
-        # return self.__constraint_positive_surrounding_weights(w)
-        # return self.__constraint_derrick_et_al_with_transpose(w)
-        return self.__constraint_derrick_et_al_with_reshape(w)
+        if self.const_type == 'guru':
+            return self.__constraint_positive_surrounding_weights(w)
+        elif self.const_type == 'bayar':
+            return self.__constraint_derrick_et_al_with_transpose(w)
+        elif self.const_type == 'bug':
+            return self.__constraint_derrick_et_al_with_reshape(w)
+        else:
+            raise ValueError('Invalid constraint type')
 
     def get_config(self):
         return {}

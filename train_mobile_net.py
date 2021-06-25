@@ -24,6 +24,7 @@ if __name__ == "__main__":
                         help='Choose the available GPU devices')
     parser.add_argument('--category', type=str, required=False, help='enter "native", "whatsapp", or "youtube"')
     parser.add_argument('--global_results_dir', type=str, required=True, help='Path to results dir')
+    parser.add_argument('--const_type', type=str, required=True, help='Constraint type')
 
     args = parser.parse_args()
     fc_size = args.fc_size
@@ -39,6 +40,7 @@ if __name__ == "__main__":
     gpu_id = args.gpu_id
     category = args.category
     global_results_dir = Path(args.global_results_dir)
+    const_type = args.const_type
 
     import tensorflow as tf
 
@@ -63,7 +65,9 @@ if __name__ == "__main__":
 
     net = Network(constrained_net=use_constrained_layer,
                   num_batches=num_batches,
-                  global_results_dir=global_results_dir)
+                  global_results_dir=global_results_dir,
+                  const_type=const_type,
+                  )
     if model_path:
         net.set_model(model_path)
     else:

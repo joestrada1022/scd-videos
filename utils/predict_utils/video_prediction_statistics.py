@@ -164,9 +164,9 @@ class VideoPredictionStatistics:
             df_video_predictions["true_class"] == df_video_predictions["top1_class"], 1, 0)
 
         # Averages total
-        grand_acc = round(df_video_predictions["correct"].mean(), 3)
-        grand_conf = round(df_video_predictions["top1_conf"].mean(), 3)
-        grand_loss = 1 - grand_conf
+        grand_acc = round(df_video_predictions["correct"].mean(), 4)
+        grand_conf = round(df_video_predictions["top1_conf"].mean(), 4)
+        grand_loss = round(df_video_predictions["Loss"].mean(), 4)
 
         filename = file
         filename_split = file.split("_")

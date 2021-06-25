@@ -111,6 +111,9 @@ class VideoPredictor:
                     video_result.append(None)
                     i += 1
 
+            video_loss = df_video_predictions["Loss"].mean()
+            video_result.append(video_loss)
+
             video_predictions.append(video_result)
 
         return video_predictions
@@ -124,5 +127,7 @@ class VideoPredictor:
             columns.append(f"top{i + 1}_class")
             # e.g. top1_conf
             columns.append(f"top{i + 1}_conf")
+
+        columns.append('Loss')
 
         return columns

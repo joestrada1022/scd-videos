@@ -5,7 +5,8 @@ import numpy as np
 import tensorflow as tf
 from keras.callbacks import TensorBoard
 
-from utils.lr_scheduler import WarmUpCosineDecayScheduler
+from utils.callbacks.lr_scheduler import WarmUpCosineDecayScheduler
+from utils.callbacks.predictions import PredictionsCallback
 
 
 class BaseNet(abc.ABC):
@@ -72,7 +73,7 @@ class BaseNet(abc.ABC):
     def compile(self):
         # custom_loss = self.make_custom_loss(self.model)
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                           optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.0005),
+                           optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.1),
                            metrics=["acc"])
 
     # @staticmethod
@@ -157,7 +158,7 @@ class BaseNet(abc.ABC):
         initial_epoch = self.__get_initial_epoch()
         epochs += initial_epoch
 
-        callbacks = self.get_callbacks(train_ds, epochs)
+        callbacks = self.get_callbacks(train_ds, val_ds, epochs)
 
         self.model.fit(train_ds,
                        epochs=epochs,
@@ -167,12 +168,21 @@ class BaseNet(abc.ABC):
                        workers=12,
                        use_multiprocessing=True)
 
-    def get_callbacks(self, dataset, epochs):
+        # import sklearn
+        # true_labels, predicted_labels = self.predict(dataset=train_ds)
+        # acc = sklearn.metrics.accuracy_score(true_labels, predicted_labels)
+        # print('Train acc', acc)
+        #
+        # true_labels, predicted_labels = self.predict(dataset=val_ds)
+        # acc = sklearn.metrics.accuracy_score(true_labels, predicted_labels)
+        # print('Val acc', acc)
+
+    def get_callbacks(self, train_ds, val_ds, epochs):
         default_file_name = "fm-e{epoch:05d}.h5"
         save_model_path = self.get_save_model_path(default_file_name)
 
         save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
-                                                           verbose=1,
+                                                           verbose=0,
                                                            save_weights_only=False,
                                                            period=1)
 
@@ -187,7 +197,7 @@ class BaseNet(abc.ABC):
         #     # ),
         #     verbose=1)
 
-        steps_per_epoch = tf.data.experimental.cardinality(dataset).numpy()
+        steps_per_epoch = tf.data.experimental.cardinality(train_ds).numpy()
         warm_up_epochs = 3
         lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=0.1,
                                                  total_steps=epochs * steps_per_epoch,
@@ -196,7 +206,9 @@ class BaseNet(abc.ABC):
                                                  hold_base_rate_steps=0,
                                                  verbose=1)
 
-        return [save_model_cb, tensorboard_cb, lr_callback]
+        print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
+
+        return [save_model_cb, tensorboard_cb, lr_callback, print_predictions_cb]
 
     def evaluate(self, test_ds, model_path=None):
         if model_path is not None:
