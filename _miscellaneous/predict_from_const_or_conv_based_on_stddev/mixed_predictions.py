@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def mixed_predictions(conv_net_frame_predictions, const_net_frame_predictions, standard_deviation_file, threshold):
+def mixed_predictions(conv_net_frame_predictions, const_net_frame_predictions, standard_deviation_file, threshold=0.1):
     std_dev_map = {}
     with open(standard_deviation_file) as f:
         f.__next__()
@@ -15,13 +15,13 @@ def mixed_predictions(conv_net_frame_predictions, const_net_frame_predictions, s
         for line in f1:
             parts = line.split(',')
             key = parts[0].split("'")[1]
-            if std_dev_map[key] > 0.1:  # use conv net
+            if std_dev_map[key] > threshold:  # use conv net
                 all_lines.append(','.join(parts[:4]) + '\n')
         f2.__next__()
         for line in f2:
             parts = line.split(',')
             key = parts[0].split("'")[1]
-            if std_dev_map[key] <= 0.1:  # use const net
+            if std_dev_map[key] <= threshold:  # use const net
                 all_lines.append(','.join(parts[:4]) + '\n')
 
     parts = list(conv_net_frame_predictions.parts)

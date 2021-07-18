@@ -3,7 +3,6 @@ import random
 from pathlib import Path
 
 import cv2
-import lmdb
 import numpy as np
 from tqdm import tqdm
 
@@ -23,78 +22,6 @@ def generate_center_crop(source_images_dir, dest_images_dir, width=128, height=1
                        int(img_width / 2 - width / 2):int(img_width / 2 + width / 2)
                        ]
             cv2.imwrite(str(dest_img_path), dest_img)
-
-
-def generate_crops_lmdb(source_images_dir, split_type, dest_homo_root, dest_rand_root,
-                        num_crops=1, width=128, height=128, stride=16):
-    """
-    Extract the most homogeneous crop among all the image crops. The crops are sampled by using the specified size.
-    :param dest_rand_root:
-    :param dest_homo_root:
-    :param split_type:
-    :param num_crops: number of crops to extract from each video frame based on the specified mode
-    :param source_images_dir:
-    :param width: of the crop in pixels
-    :param height: of the crop in pixels
-    :param stride: in number of pixels
-    :return: None. Save the crops in the destination directory
-    """
-
-    dest_homo_root.mkdir(parents=True, exist_ok=True)
-    dest_rand_root.mkdir(parents=True, exist_ok=True)
-
-    source_img_paths = list(source_images_dir.glob('*'))
-    total_num_images = len(list(source_images_dir.parent.glob('*/*.jpg')))  # images count from all devices
-    random.shuffle(source_img_paths)
-
-    # open lmdb database for writing
-    estimated_img_size = 128 * 128 * 3
-    estimated_img_name_size = 150
-    buffer = 150
-    map_size = total_num_images * (estimated_img_size + estimated_img_name_size + buffer) * num_crops
-    lmdb_homo_filename = str(dest_homo_root.joinpath(f'{split_type}_lmdb'))
-    lmdb_rand_filename = str(dest_rand_root.joinpath(f'{split_type}_lmdb'))
-
-    for source_img_path in tqdm(source_img_paths):
-        source_image_id = source_img_path.stem.split('-')[-1]
-        source_device_id = source_img_path.stem.split('-')[0]
-        dest_image_ids = [source_device_id + '-' + source_image_id + str(x).zfill(3) for x in range(num_crops)]
-
-        with env_h.begin(write=True) as txn_h_check:
-            test_id = txn_h_check.get(key=dest_image_ids[0].encode('ascii'), default=None)
-        if not test_id:
-            source_img = cv2.imread(str(source_img_path))
-            img_height, img_width, _ = source_img.shape
-
-            # Search for the most homogeneous crop
-            all_crops = []
-            for x in range(0, img_width - width + 1, stride):
-                for y in range(0, img_height - height + 1, stride):
-                    crop_img = source_img[y:y + height, x:x + width]
-                    crop_std = np.std(crop_img / 255.0)
-                    all_crops.append((crop_std, crop_img))
-
-            # Save Random crops
-            with lmdb.open(lmdb_rand_filename, map_size) as env_r:
-                with env_r.begin(write=True) as txn_r:
-                    random.seed(999)
-                    random.shuffle(all_crops)
-                    dest_crops = all_crops[:num_crops]
-                    for patch_name, patch in zip(dest_image_ids, dest_crops):
-                        patch = patch[1].tobytes()
-                        patch_name = patch_name.encode('ascii')
-                        txn_r.put(key=patch_name, value=patch)
-                    txn_r.commit()
-
-            # Save Homogeneous crops
-            with lmdb.open(lmdb_homo_filename, map_size) as env_h:
-                with env_h.begin(write=True) as txn_h:
-                    dest_crops = sorted(all_crops, key=lambda z: z[0])[:num_crops]
-                    for patch_name, patch in zip(dest_image_ids, dest_crops):
-                        patch = patch[1].tobytes()
-                        patch_name = patch_name.encode('ascii')
-                        txn_h.put(key=patch_name, value=patch)
-                    txn_h.commit()
 
 
 def generate_crops(source_images_dir, split_type, dest_homo_root, dest_rand_root,
@@ -171,22 +98,20 @@ if __name__ == '__main__':
 
     source_root = Path(r'/scratch/p288722/datasets/VISION/bal_28_devices_derrick')
 
-    for split_type in ['train', 'test']:
-        print(f'Starting {split_type}')
-        source_device_paths = sorted(list(source_root.joinpath(split_type).glob('*')))
+    for split in ['train', 'test']:
+        print(f'Starting {split}')
+        source_device_paths = sorted(list(source_root.joinpath(split).glob('*')))
         if method == 'center_crop':
             dest_root = Path(rf'/scratch/p288722/datasets/VISION/center_crop_128x128_{crops_per_frame}')
             generate_center_crop(
                 source_images_dir=source_device_paths[device_id],
-                dest_images_dir=dest_root.joinpath(split_type).joinpath(source_device_paths[device_id].name)
+                dest_images_dir=dest_root.joinpath(split).joinpath(source_device_paths[device_id].name)
             )
         else:
-            dest_homo_root = Path(rf'/scratch/p288722/datasets/VISION/homo_crop_128x128_{crops_per_frame}')
-            dest_rand_root = Path(rf'/scratch/p288722/datasets/VISION/rand_crop_128x128_{crops_per_frame}')
             generate_crops(
                 source_images_dir=source_device_paths[device_id],
-                split_type=split_type,
-                dest_homo_root=dest_homo_root,
-                dest_rand_root=dest_rand_root,
+                split_type=split,
+                dest_homo_root=Path(rf'/scratch/p288722/datasets/VISION/homo_crop_128x128_{crops_per_frame}'),
+                dest_rand_root=Path(rf'/scratch/p288722/datasets/VISION/rand_crop_128x128_{crops_per_frame}'),
                 num_crops=crops_per_frame
             )

@@ -11,7 +11,6 @@ from utils.callbacks.predictions import PredictionsCallback
 
 class BaseNet(abc.ABC):
     def __init__(self, constrained_net, num_batches, global_results_dir, model_path=None):
-        self.use_TensorBoard = True
         self.num_batches = num_batches
         self.model = None
         self.model_path = None
@@ -35,22 +34,6 @@ class BaseNet(abc.ABC):
         tf.compat.v1.set_random_seed(108)
         tf.random.set_seed(108)
 
-    def set_constrained_params(self, n_filters=None, kernel_size=None):
-        print(f"Setting constrained params: number of filters={n_filters}, kernel size={kernel_size}")
-        if n_filters is not None:
-            self.constrained_n_filters = n_filters
-        if kernel_size is not None:
-            self.constrained_kernel_size = kernel_size
-
-    def get_model_name(self):
-        return self.model_name
-
-    def set_model_name(self, value):
-        self.model_name = value
-
-    def get_model(self):
-        return self.model
-
     def set_model(self, model_path):
         # Path is e.g. ~/constrained_net/fm-e00001.h5
         path_splits = model_path.split(os.sep)
@@ -64,9 +47,6 @@ class BaseNet(abc.ABC):
         if self.model is None:
             raise ValueError(f"Model could not be loaded from location {model_path}")
 
-    def set_verbose(self, value):
-        self.verbose = value
-
     def create_model(self, **kwargs):
         raise NotImplementedError('method create_model is not implemented')
 
@@ -76,40 +56,6 @@ class BaseNet(abc.ABC):
                            optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.0005),
                            metrics=["acc"])
         self.model.run_eagerly = True
-
-    # @staticmethod
-    # def make_custom_loss(model):
-    #     """Creates a loss function that uses `model` for evaluation
-    #     """
-    #
-    #     def custom_loss(y_true, y_pred):
-    #         # return K.mean(K.square(model(y_pred) - model(y_true)), axis=-1)
-    #         cce = tf.keras.losses.CategoricalCrossentropy()(y_true, y_pred)
-    #
-    #         (width, height, channels, filters) = model.weights[0].shape
-    #         width_center = width // 2
-    #         height_center = height // 2
-    #
-    #         center_offset = []
-    #         surround_offset = []
-    #         target_value = 1
-    #
-    #         for i in range(channels):
-    #             for j in range(filters):
-    #                 # print(model.weights[0][:, :, i, j])
-    #                 center_offset.append(
-    #                     K.sum([model.weights[0][:, :, i, j][width_center, height_center], target_value]))
-    #                 surround_offset.append(
-    #                     K.sum([K.sum([K.sum(model.weights[0][:, :, i, j]),
-    #                                   -model.weights[0][:, :, i, j][width_center, height_center]]),
-    #                            -target_value]))
-    #
-    #         constraint_center = K.mean(K.square(center_offset))
-    #         constraint_surroundings = K.mean(K.square(surround_offset))
-    #         constraint_loss = K.sum([cce, constraint_center, constraint_surroundings])
-    #         return constraint_loss
-    #
-    #     return custom_loss
 
     def get_tensorboard_path(self):
         if self.model_name is None:
@@ -199,7 +145,7 @@ class BaseNet(abc.ABC):
                                                  hold_base_rate_steps=0,
                                                  verbose=1)
 
-        print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
+        # print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
 
         return [save_model_cb, tensorboard_cb, lr_callback]
 

@@ -42,20 +42,6 @@ class VideoPredictionStatistics:
         return files
 
     @staticmethod
-    def __get_device_statistics(file):
-        ##############################
-        # NOT COMPLETE OR IN USE YET #
-        ##############################
-        df_video_predictions = pd.read_csv(file)
-        # Averages per device
-        df_device_avg = df_video_predictions.groupby("true_class").agg(
-            mean_acc=("correct", "mean"),
-            mean_conf=("top1_conf", "mean")
-        )
-
-        return df_device_avg
-
-    @staticmethod
     def __get_native_scenario_statistics(df_video_predictions):
         # Videos of flat objects (e.g. walls or skies)
         df_flat = df_video_predictions[df_video_predictions["filename"].str.contains("flat")]

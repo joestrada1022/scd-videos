@@ -20,7 +20,7 @@ def get_distribution(view_file):
 
 def plot_data_distribution(source_view_dir):
     train_dist = get_distribution(source_view_dir.joinpath('train.json'))
-    val_dist = get_distribution(source_view_dir.joinpath('val.json'))
+    # val_dist = get_distribution(source_view_dir.joinpath('val.json'))
     test_dist = get_distribution(source_view_dir.joinpath('test.json'))
 
     # ticks = [x for x in train_dist]
