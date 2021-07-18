@@ -25,7 +25,7 @@ def process_data(num_frames, root_dest_dir, source_results_dir):
         for video in dict_videos:
             frame_predictions = sorted(dict_videos[video])
             num_source_frames = len(frame_predictions)
-            for index in range(0, num_source_frames, int(num_source_frames/frame_count)):
+            for index in range(0, num_source_frames, int(num_source_frames / frame_count)):
                 dest_lines.append(dict_videos[video][index])
 
         with open(dest_frames_file, 'w+') as f:
@@ -36,5 +36,6 @@ if __name__ == '__main__':
     process_data(
         num_frames=[1, 5, 10, 20, 50, 100, 400, 800],
         root_dest_dir=Path(r'/scratch/p288722/runtime_data/scd_videos_tf/200_frames_pred/mobile_net_2/models/ConvNet'),
-        source_results_dir=Path(r'/scratch/p288722/runtime_data/scd_videos_tf/200_frames_pred/mobile_net_2/models/ConvNet/predictions_all_frames')
+        source_results_dir=Path(
+            r'/scratch/p288722/runtime_data/scd_videos_tf/200_frames_pred/mobile_net_2/models/ConvNet/predictions_all_frames')
     )

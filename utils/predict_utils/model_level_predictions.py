@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from sklearn import metrics
 
 
@@ -60,6 +61,7 @@ if __name__ == '__main__':
     d2m_map[DEVICES.index('D34_Apple_iPhone5')] = DEVICES.index('D29_Apple_iPhone5')
 
     video_predictions_to_model_level_results(
-        video_predictions_file=Path(r'/scratch/p288722/runtime_data/scd-videos/i_frames/all_frames_28d_64_pred/mobile_net/models/h0_ConvNet/predictions_all_frames/videos/fm-e00010_V_predictions.csv'),
+        video_predictions_file=Path(
+            r'/scratch/p288722/runtime_data/scd-videos/i_frames/all_frames_28d_64_pred/mobile_net/models/h0_ConvNet/predictions_all_frames/videos/fm-e00010_V_predictions.csv'),
         devices_to_models_map=d2m_map,
     )

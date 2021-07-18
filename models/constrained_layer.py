@@ -309,5 +309,3 @@ if __name__ == "__main__":
     output = CombineInputsWithConstraints()(cnn_inputs, activations)
     # f = Constrained3DKernelMinimal()
     # new_weights = f(weights)
-
-    print(' ')

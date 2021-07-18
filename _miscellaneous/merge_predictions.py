@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 def merge_predictions(source_dir, num_fragments, dest_dir):
     header_line = []
-    lines =[]
+    lines = []
     for index in tqdm(range(num_fragments)):
         predictions_file = source_dir.joinpath(f'predictions_all_frames_{index}/frames/fm-e00007_F_predictions.csv')
         with open(predictions_file, 'r') as f:
