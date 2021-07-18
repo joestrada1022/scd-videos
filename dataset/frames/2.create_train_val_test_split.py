@@ -165,8 +165,8 @@ def extract_frames():
         all_videos = list(device.glob('*'))
         random.shuffle(all_videos)
 
-        ref_train_dir = Path(r'/scratch/p288722/datasets/_VISION/bal_28_devices_derrick/train')
-        ref_test_dir = Path(r'/scratch/p288722/datasets/_VISION/bal_28_devices_derrick/test')
+        ref_train_dir = Path(r'/data/p288722/from_f118170/vbdi/datasets/Exp.III/balanced_ds_28D/train')
+        ref_test_dir = Path(r'/data/p288722/from_f118170/vbdi/datasets/Exp.III/balanced_ds_28D/test')
 
         # 7 native videos in train
         reference_train_videos = set([x.name.split('-')[0] for x in ref_train_dir.glob(f'{device.name}/*.jpg')])
@@ -222,16 +222,18 @@ def extract_frames():
 
         # val_videos.extend(remaining_videos[:6])
         #
-        # # update the dictionary by choosing num_frames
-        # if num_frames == 200:
-        #     train_dict[device.name] = __get_200_frames(train_videos, ref_train_dir.joinpath(device.name))
-        #     test_dict[device.name] = __get_200_frames(test_videos, ref_test_dir.joinpath(device.name))
-        # else:
-        #     train_dict[device.name] = __get_frames(train_videos, num_frames)
-        #     test_dict[device.name] = __get_frames(test_videos, num_frames)
-        # val_dict[device.name] = __get_frames(val_videos, num_frames)
-        #
-        # print(f'{device.name} : train - {len(train_videos)}, test - {len(test_videos)}, val - {len(val_videos)}')
+        # update the dictionary by choosing num_frames
+        if num_frames == 200:
+            train_dict[device.name] = __get_200_frames(train_videos, ref_train_dir.joinpath(device.name))
+            test_dict[device.name] = __get_200_frames(test_videos, ref_test_dir.joinpath(device.name))
+        else:
+            train_dict[device.name] = __get_frames(train_videos, num_frames)
+            test_dict[device.name] = __get_frames(test_videos, num_frames)
+
+        # # Unbalanced Validation set
+        # unbal_val_dict[device.name] = __get_frames(val_videos, num_frames)
+
+        print(f'{device.name} : train - {len(train_videos)}, test - {len(test_videos)}, val - {len(val_videos)}')
 
     validation_videos_1 = {}
     for device in validation_set_1:
@@ -263,12 +265,10 @@ def extract_frames():
         val_videos = [x for x in validation_videos if device.name in str(x)]
         val_dict[device.name] = __get_frames(val_videos, num_frames)
 
-    print(' ')
-
-    # with open(train_file, 'w') as f:
-    #     f.write(json.dumps(train_dict, indent=2))
-    # with open(test_file, 'w') as f:
-    #     f.write(json.dumps(test_dict, indent=2))
+    with open(train_file, 'w') as f:
+        f.write(json.dumps(train_dict, indent=2))
+    with open(test_file, 'w') as f:
+        f.write(json.dumps(test_dict, indent=2))
     with open(val_file, 'w') as f:
         f.write(json.dumps(val_dict, indent=2))
 

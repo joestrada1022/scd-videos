@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from dataset.data_factory import DataFactory
-from models.constrained_layer import Constrained3DKernelMinimal
+from models.constrained_layer import Constrained3DKernelMinimal, CombineInputsWithConstraints
 from models.mobile_net import MobileNetBase
 
 
@@ -27,7 +27,8 @@ class FramePredictor:
         custom_objects = {
             'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
             '_hard_swish': MobileNetBase._hard_swish,
-            '_relu6': MobileNetBase._relu6
+            '_relu6': MobileNetBase._relu6,
+            'CombineInputsWithConstraints': CombineInputsWithConstraints
         }
         if weights_only:
             model_class.model.load_weights(model_path)

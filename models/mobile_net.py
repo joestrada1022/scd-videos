@@ -14,7 +14,7 @@ from keras.models import Model
 from tensorflow.keras.layers import Conv2D
 
 from models.base_net import BaseNet
-from models.constrained_layer import Constrained3DKernelMinimal
+from models.constrained_layer import Constrained3DKernelMinimal, CombineInputsWithConstraints
 
 """MobileNet v3 models for Keras.
 # Reference
@@ -256,7 +256,8 @@ class MobileNetV3SmallWrapper(MobileNetBase):
                        kernel_initializer=tf.keras.initializers.RandomUniform(minval=0.0001, maxval=1, seed=108),
                        kernel_constraint=Constrained3DKernelMinimal(const_type),
                        name="constrained_layer")(inputs)
-            x = BatchNormalization(axis=channel_axis)(x)
+            # x = CombineInputsWithConstraints()(inputs, x)
+            # x = BatchNormalization(axis=channel_axis)(x)
             x = self._conv_block(x, 16, (3, 3), strides=(2, 2), nl='HS')
         else:
             x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
@@ -290,7 +291,7 @@ class MobileNetV3SmallWrapper(MobileNetBase):
 
 
 class MobileNet(BaseNet):
-    def __init__(self, constrained_net, num_batches, global_results_dir, const_type='bug', model_path=None):
+    def __init__(self, constrained_net, num_batches, global_results_dir, const_type='guru', model_path=None):
         super().__init__(constrained_net, num_batches, global_results_dir, model_path)
         self.const_type = const_type
 
@@ -304,15 +305,24 @@ class MobileNet(BaseNet):
 
         # noinspection PyProtectedMember
         self.model = tf.keras.models.load_model(model_path, custom_objects={
-            'Constrained3DKernelMinimal': Constrained3DKernelMinimal(self.const_type),
+            'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
             '_hard_swish': MobileNetBase._hard_swish,
-            '_relu6': MobileNetBase._relu6})
+            '_relu6': MobileNetBase._relu6,
+            'CombineInputsWithConstraints': CombineInputsWithConstraints})
+
+        # model_path = os.path.join(model_dir, model_file_name)
+        # custom_objects = {
+        #     'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
+        #     '_hard_swish': MobileNetBase._hard_swish,
+        #     '_relu6': MobileNetBase._relu6,
+        #     'CombineInputsWithConstraints': CombineInputsWithConstraints
+        # }
 
         if self.model is None:
             raise ValueError(f"Model could not be loaded from location {model_path}")
 
-    def create_model(self, num_output, height=480, width=800, model_name=None):
-        input_shape = (height, width, 3)
+    def create_model(self, num_output, height=480, width=800, num_channels=3, model_name=None):
+        input_shape = (height, width, num_channels)
         net = MobileNetV3SmallWrapper(shape=input_shape, n_class=num_output)
         model = net.build(is_constrained=self.constrained_net, const_type=self.const_type)
         self.model_name = model_name

@@ -134,14 +134,28 @@ if __name__ == '__main__':
 
     plot_data = {
         'MobileNet - Constrained': Path(
-            r'/scratch/p288722/runtime_data/scd-videos/dev_const_layer/50_frames_28d_128/mobile_net/models/'
-            r'ConstNet_guru/predictions_50_frames_val/videos/V_prediction_stats.csv'),
+            r'/scratch/p288722/runtime_data/scd-videos/no_frame_selection/50_frames_8d_64/mobile_net/models/'
+            r'h0_lab_ConstNet_derrick/predictions_50_frames_val/videos/V_prediction_stats.csv'),
     }
-    make_combined_plots_horizontal(plot_data, replace_string='50_frames_28d_128_pred')
+    make_combined_plots_horizontal(plot_data, replace_string='50_frames_8d_64_pred')
 
     plot_data = {
         'MobileNet - Constrained': Path(
-            r'/scratch/p288722/runtime_data/scd-videos/dev_const_layer/50_frames_28d_64/mobile_net/models/'
-            r'ConstNet_guru/predictions_50_frames_val/videos/V_prediction_stats.csv'),
+            r'/scratch/p288722/runtime_data/scd-videos/no_frame_selection/50_frames_8d_64/mobile_net/models/'
+            r'h0_lab_ConvNet/predictions_50_frames_val/videos/V_prediction_stats.csv'),
     }
-    make_combined_plots_horizontal(plot_data, replace_string='50_frames_28d_64_pred')
+    make_combined_plots_horizontal(plot_data, replace_string='50_frames_8d_64_pred')
+
+    plot_data = {
+        'MobileNet - Constrained': Path(
+            r'/scratch/p288722/runtime_data/scd-videos/i_frames/all_frames_8d_64/mobile_net/models/'
+            r'h0_lab_ConstNet_derrick/predictions_all_frames_val/videos/V_prediction_stats.csv'),
+    }
+    make_combined_plots_horizontal(plot_data, replace_string='all_frames_8d_64_pred')
+
+    plot_data = {
+        'MobileNet - Constrained': Path(
+            r'/scratch/p288722/runtime_data/scd-videos/i_frames/all_frames_8d_64/mobile_net/models/'
+            r'h0_lab_ConvNet/predictions_all_frames_val/videos/V_prediction_stats.csv'),
+    }
+    make_combined_plots_horizontal(plot_data, replace_string='all_frames_8d_64_pred')

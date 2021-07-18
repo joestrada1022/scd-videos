@@ -73,8 +73,9 @@ class BaseNet(abc.ABC):
     def compile(self):
         # custom_loss = self.make_custom_loss(self.model)
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                           optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.1),
+                           optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.0005),
                            metrics=["acc"])
+        self.model.run_eagerly = True
 
     # @staticmethod
     # def make_custom_loss(model):
@@ -158,7 +159,7 @@ class BaseNet(abc.ABC):
         initial_epoch = self.__get_initial_epoch()
         epochs += initial_epoch
 
-        callbacks = self.get_callbacks(train_ds, val_ds, epochs)
+        callbacks = self.get_callbacks(train_ds, val_ds, epochs, initial_epoch)
 
         self.model.fit(train_ds,
                        epochs=epochs,
@@ -168,16 +169,7 @@ class BaseNet(abc.ABC):
                        workers=12,
                        use_multiprocessing=True)
 
-        # import sklearn
-        # true_labels, predicted_labels = self.predict(dataset=train_ds)
-        # acc = sklearn.metrics.accuracy_score(true_labels, predicted_labels)
-        # print('Train acc', acc)
-        #
-        # true_labels, predicted_labels = self.predict(dataset=val_ds)
-        # acc = sklearn.metrics.accuracy_score(true_labels, predicted_labels)
-        # print('Val acc', acc)
-
-    def get_callbacks(self, train_ds, val_ds, epochs):
+    def get_callbacks(self, train_ds, val_ds, epochs, completed_epochs):
         default_file_name = "fm-e{epoch:05d}.h5"
         save_model_path = self.get_save_model_path(default_file_name)
 
@@ -201,6 +193,7 @@ class BaseNet(abc.ABC):
         warm_up_epochs = 3
         lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=0.1,
                                                  total_steps=epochs * steps_per_epoch,
+                                                 global_step_init=completed_epochs * steps_per_epoch,
                                                  warmup_learning_rate=0,
                                                  warmup_steps=warm_up_epochs * steps_per_epoch,
                                                  hold_base_rate_steps=0,
@@ -208,7 +201,7 @@ class BaseNet(abc.ABC):
 
         print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
 
-        return [save_model_cb, tensorboard_cb, lr_callback, print_predictions_cb]
+        return [save_model_cb, tensorboard_cb, lr_callback]
 
     def evaluate(self, test_ds, model_path=None):
         if model_path is not None:

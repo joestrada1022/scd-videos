@@ -27,16 +27,17 @@ class DataFactory:
             self.val_data = list(itertools.chain.from_iterable(self.val_data.values()))
             random.seed(108)
             random.shuffle(self.val_data)
-        with open(Path(input_dir).joinpath('test.json'), 'r') as f:
-            self.test_data = json.load(f)
-            self.test_data = list(itertools.chain.from_iterable(self.test_data.values()))
-            random.seed(108)
-            random.shuffle(self.test_data)
+        if Path(input_dir).joinpath('test.json').exists():
+            with open(Path(input_dir).joinpath('test.json'), 'r') as f:
+                self.test_data = json.load(f)
+                self.test_data = list(itertools.chain.from_iterable(self.test_data.values()))
+                random.seed(108)
+                random.shuffle(self.test_data)
 
         self.batch_size = batch_size
         self.img_width = width
         self.img_height = height
-        self.channels = 3
+        # self.channels = 3
 
         # To allow reproducibility
         self.seed = 108
@@ -68,6 +69,12 @@ class DataFactory:
         img = tf.io.read_file(file_path)
         img = tf.image.decode_png(img, channels=3)
         img = tf.image.convert_image_dtype(img, tf.dtypes.float32)
+
+        # img = img[:, :, 1]  # Considering only the Green color channel
+        # img = tf.expand_dims(img, -1)   # Adding back the num_channels axis : (height, width, num_channels)
+
+        # img = tfio.experimental.color.rgb_to_lab(img)
+        # img = (img + tf.constant([0.0, 128, 128], shape=(1, 1, 3))) / tf.constant([100.0, 255, 255], shape=(1, 1, 3))
 
         # Set to CNN Input Dimensions
         if resize_dim is None:

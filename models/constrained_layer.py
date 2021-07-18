@@ -5,10 +5,64 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from keras.constraints import Constraint
+from keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras.losses import categorical_crossentropy
-from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
+
+
+class CombineInputsWithConstraints(tf.keras.layers.Layer):
+    def __init__(self, kernel_size=5,
+                 min_threshold=0.005,
+                 max_threshold=0.02, **kwargs):
+        kwargs['name'] = 'combine_inputs_with_constraints'
+        kwargs['trainable'] = False
+
+        super(CombineInputsWithConstraints, self).__init__(**kwargs)
+        self.kernel_size = kernel_size
+        self.min_threshold = min_threshold
+        self.max_threshold = max_threshold
+
+    def build(self, input_shape):
+        self.p = self.kernel_size // 2  # inner padding
+        _, self.img_height, self.img_width, self.num_channels = input_shape
+
+    def call(self, cnn_inputs, constrained_activations):
+        """
+        This method is being implemented assuming that the input tensor dimensions correspond to:
+        batch_size x height x width x num_channels
+        :param cnn_inputs: inputs to the CNN
+        :param constrained_activations: constrained net outputs
+        :return:
+        """
+
+        k = self.kernel_size
+        patches = tf.image.extract_patches(cnn_inputs, [1, k, k, 1], [1, 1, 1, 1], [1, 1, 1, 1], 'VALID')
+        p = tf.reshape(patches, shape=(
+            -1, self.img_height - 2 * self.p, self.img_width - 2 * self.p, k, k, self.num_channels))
+        std_dev = tf.math.reduce_std(p, axis=[3, 4])
+        homo_mask = tf.reduce_prod(tf.multiply(tf.cast(std_dev >= self.min_threshold, tf.float32),
+                                               tf.cast(std_dev <= self.max_threshold, tf.float32)), axis=3)
+        homo_mask = tf.stack([homo_mask] * 3, axis=3)
+        non_homo_mask = tf.ones_like(homo_mask) - homo_mask
+
+        valid_inputs = cnn_inputs[:, self.p:-self.p, self.p:-self.p, :]
+        min_val = tf.reduce_min(constrained_activations, axis=[1, 2, 3], keepdims=True)
+        max_val = tf.reduce_max(constrained_activations, axis=[1, 2, 3], keepdims=True)
+        min_max_activations = (constrained_activations - min_val) / (max_val - min_val)
+
+        pre_precessed_output = tf.multiply(homo_mask, valid_inputs) + tf.multiply(non_homo_mask, min_max_activations)
+
+        return pre_precessed_output
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'kernel_size': self.kernel_size,
+            'min_threshold': self.min_threshold,
+            'max_threshold': self.max_threshold,
+        })
+        return config
 
 
 class Constrained3DKernelMinimal(Constraint):
@@ -47,7 +101,7 @@ class Constrained3DKernelMinimal(Constraint):
        """
         if self.const_type == 'guru':
             return self.__constraint_positive_surrounding_weights(w)
-        elif self.const_type == 'bayar':
+        elif self.const_type == 'derrick':
             return self.__constraint_derrick_et_al_with_transpose(w)
         elif self.const_type == 'bug':
             return self.__constraint_derrick_et_al_with_reshape(w)
@@ -245,11 +299,14 @@ def __preprocess_data(train_data):
 
 
 if __name__ == "__main__":
-    inputs, targets = __preprocess_data(train_data=__get_train_data())
-    __train(x=inputs, y=targets)
+    # inputs, targets = __preprocess_data(train_data=__get_train_data())
+    # __train(x=inputs, y=targets)
 
-    # weights = np.random.uniform(low=-1, high=1, size=(5, 5, 3, 1))
-    # weights = tf.convert_to_tensor(weights, dtype=tf.float64)
+    cnn_inputs = np.random.uniform(low=0, high=1, size=(2, 480, 800, 3))
+    cnn_inputs = tf.convert_to_tensor(cnn_inputs, dtype=tf.float32)
+    activations = np.random.uniform(low=-1, high=0, size=(2, 476, 796, 3))
+    activations = tf.convert_to_tensor(activations, dtype=tf.float32)
+    output = CombineInputsWithConstraints()(cnn_inputs, activations)
     # f = Constrained3DKernelMinimal()
     # new_weights = f(weights)
 

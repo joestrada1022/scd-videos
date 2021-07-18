@@ -13,8 +13,8 @@ def start(device):
     videos_processed = 0
     device_time_start = time.time()
 
-    path = Path(INPUT_DIR).joinpath(device)
-    all_videos = list(path.glob('videos/*/*'))
+    input_device_folder = Path(INPUT_DIR).joinpath(device)
+    all_videos = list(input_device_folder.glob('videos/*/*'))
     total_nb_videos = len(all_videos)
 
     for video_path in all_videos:
@@ -36,34 +36,20 @@ def start(device):
 
 def video_to_frames(video_name, video_path, device, verbose=True):
     # Create video output dir
-    output_dir = os.path.join(OUTPUT_DIR, device, video_name)
-
-    # Create directory if not exists
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir)
-    os.makedirs(output_dir)
+    output_dir = Path(OUTPUT_DIR).joinpath(device).joinpath(video_name)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Start capturing the feed
     cap = cv2.VideoCapture(video_path)
 
     # Frame rate per second
-    frame_rate = np.floor(cap.get(5))
+    frame_rate = np.floor(cap.get(cv2.CAP_PROP_FPS))
 
     # Total number of frames
-    video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-
-    # Calculate modulo to save frames throughout complete video, rather than frames [1:1+FRAMES_PER_VIDEO]
-    # mod = 1
-    # if video_length > FRAMES_TO_SAVE_PER_VIDEO:
-    #     mod = video_length // FRAMES_TO_SAVE_PER_VIDEO
-
-    # number_of_frames_to_save = FRAMES_TO_SAVE_PER_VIDEO
-    # if SAVE_FRAME_PER_SECOND:
-    #     number_of_frames_to_save = np.floor(video_length / frame_rate)
+    num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     if verbose:
-        print(
-            f"Video: {video_name}, #frames: {video_length}, FPS: {frame_rate}, #frames to save: {video_length}.")
+        print(f"Video: {video_name}, #frames: {num_frames}, FPS: {frame_rate}, #frames to save: {num_frames}.")
 
     frames_saved = 0
     count = 0
@@ -76,23 +62,15 @@ def video_to_frames(video_name, video_path, device, verbose=True):
         if ret:
             # Get current frame id
             frame_id = cap.get(1)
-
-            # # Determine whether we have to save this frame
-            # if SAVE_FRAME_PER_SECOND and frame_id % frame_rate == 0:
-            #     save_frame = True
-            # else:
-            #     save_frame = frame_id % mod == 0
-            #
-            # # Write frame to disk
-            # if save_frame:
-            # Check whether we have to resize or crop the frame
-
-            cv2.imwrite(output_dir + f"/{video_name}-" + "%#05d.png" % frame_id, frame)
+            frame_path = output_dir.joinpath(f"{video_name}-" + "%#05d.png" % frame_id)
+            if not frame_path.exists():
+                print(frame_path)
+                cv2.imwrite(str(frame_path), frame)
             frames_saved = frames_saved + 1
         count += 1
 
         # if (frames_saved >= number_of_frames_to_save or count >= video_length):
-        if count >= video_length:
+        if count >= num_frames:
             # Release the feed
             if cap.isOpened():
                 cap.release()

@@ -22,8 +22,8 @@ def create_data_set(source_data_views, dest_data_views, device_names):
 
 if __name__ == '__main__':
     create_data_set(
-        source_data_views=Path(r'/scratch/p288722/datasets/vision/bal_50_frames'),
-        dest_data_views=Path(r'/scratch/p288722/datasets/vision/8_devices/bal_50_frames'),
+        source_data_views=Path(r'/scratch/p288722/datasets/vision/bal_all_I_frames'),
+        dest_data_views=Path(r'/scratch/p288722/datasets/vision/8_devices/bal_all_I_frames'),
         # device_names=('D01_Samsung_GalaxyS3Mini', 'D34_Apple_iPhone5')
         device_names=('D01_Samsung_GalaxyS3Mini', 'D03_Huawei_P9', 'D04_LG_D290', 'D07_Lenovo_P70A',
                       'D12_Sony_XperiaZ1Compact', 'D24_Xiaomi_RedmiNote3', 'D25_OnePlus_A3000', 'D34_Apple_iPhone5')

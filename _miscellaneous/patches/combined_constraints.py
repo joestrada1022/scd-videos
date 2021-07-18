@@ -28,7 +28,7 @@ def get_patch_locations(img_data, max_std_dev, min_std_dev, patch_dimensions, pa
     non_homogeneous_patches = []
 
     patch = namedtuple('WindowSize', ['width', 'height'])(*patch_dimensions)
-    stride = namedtuple('Strides', ['width_step', 'height_step'])(patch.width // 4, patch.height // 4)
+    stride = namedtuple('Strides', ['width_step', 'height_step'])(1, 1)
     image = namedtuple('ImageSize', ['width', 'height'])(img_data.shape[1], img_data.shape[0])
     num_channels = 3
 

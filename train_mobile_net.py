@@ -24,7 +24,7 @@ if __name__ == "__main__":
                         help='Choose the available GPU devices')
     parser.add_argument('--category', type=str, required=False, help='enter "native", "whatsapp", or "youtube"')
     parser.add_argument('--global_results_dir', type=str, required=True, help='Path to results dir')
-    parser.add_argument('--const_type', type=str, required=True, help='Constraint type')
+    parser.add_argument('--const_type', type=str, required=False, default='guru', help='Constraint type')
 
     args = parser.parse_args()
     fc_size = args.fc_size
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         net.set_model(model_path)
     else:
         # Create new model
-        net.create_model(num_classes, cnn_height, cnn_width, model_name)
+        net.create_model(num_output=num_classes, height=cnn_height, width=cnn_width, model_name=model_name)
 
     net.print_model_summary()
     net.train(train_ds=train_ds, val_ds=val_ds, epochs=n_epochs)
