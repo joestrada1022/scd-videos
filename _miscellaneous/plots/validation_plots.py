@@ -1,10 +1,11 @@
+import argparse
 import shutil
 from pathlib import Path
 
 from matplotlib import pyplot as plt
 
 
-def make_combined_plots_horizontal(plots, replace_string='50_frames_pred'):
+def make_combined_plots_horizontal(plots, replace_string=None):
     plt.figure()
     fig, axs = plt.subplots(2, 1, figsize=(6, 5), dpi=300, sharex=True)
 
@@ -36,7 +37,8 @@ def make_combined_plots_horizontal(plots, replace_string='50_frames_pred'):
 
             model_path = list(plots[plot_name].parent.parent.parent.glob(f'*{str(index + 1).zfill(5)}.h5'))[0]
             tmp = list(model_path.parts)[:-1]
-            tmp[-4] = replace_string
+            # tmp[-4] = replace_string
+            tmp[-4] += '_pred'
             dest_path = Path('/'.join(tmp))
             dest_path.mkdir(exist_ok=True, parents=True)
             shutil.copy(model_path, dest_path)
@@ -110,33 +112,11 @@ def make_combined_plots_horizontal(plots, replace_string='50_frames_pred'):
 
 
 if __name__ == '__main__':
-    # plot_data = {
-    #     'MISLNet': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/misl_net_2/models/ConvNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    #     'MISLNet - Constrained': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/misl_net_2/models/ConstNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    #     'EfficientNet': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/efficient_net/models/ConvNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    #     'EfficientNet - Constrained': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/efficient_net/models/ConstNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    #     'MobileNet': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/mobile_net_1/models/ConvNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    #     'MobileNet - Constrained': Path(
-    #         r'/scratch/p288722/runtime_data/scd_videos_tf/50_frames/mobile_net_2/models/ConstNet/'
-    #         r'predictions_50_frames_bal_val/videos/V_prediction_stats.csv'),
-    # }
-    # make_combined_plots_horizontal(plot_data)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--val_summary', type=Path, required=True, help='Path to validation summary')
+    args = parser.parse_args()
 
-    plot_data = {
-        'MobileNet - Constrained': Path(
-            r'/scratch/p288722/runtime_data/scd-videos/no_frame_selection/50_frames_8d_64/mobile_net/models/'
-            r'h0_lab_ConstNet_derrick/predictions_50_frames_val/videos/V_prediction_stats.csv'),
-    }
+    plot_data = {'MobileNet - Constrained': args.val_summary}
     make_combined_plots_horizontal(plot_data, replace_string='50_frames_8d_64_pred')
 
     plot_data = {

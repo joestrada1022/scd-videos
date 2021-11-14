@@ -4,6 +4,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 
 def start(device):
@@ -15,7 +16,7 @@ def start(device):
     all_videos = list(input_device_folder.glob('videos/*/*'))
     total_nb_videos = len(all_videos)
 
-    for video_path in all_videos:
+    for video_path in tqdm(all_videos):
         print(f"processing {video_path}")
         video_time_start = time.time()
 
@@ -45,6 +46,9 @@ def video_to_frames(video_name, video_path, device, verbose=True):
 
     # Total number of frames
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Orientation
+    # orientation_auto = cap.get(cv2.CAP_PROP_ORIENTATION_AUTO)
+    # orientation_meta = cap.get(cv2.CAP_PROP_ORIENTATION_META)
 
     if verbose:
         print(f"Video: {video_name}, #frames: {num_frames}, FPS: {frame_rate}, #frames to save: {num_frames}.")

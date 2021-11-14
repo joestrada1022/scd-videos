@@ -8,7 +8,7 @@ from keract import keract
 from matplotlib import pyplot as plt
 
 from models.constrained_layer import Constrained3DKernelMinimal
-from models.mobile_net import MobileNetBase
+# from models.mobile_net import MobileNetBase
 
 
 def get_patch_location_mask(img_data, max_std_dev, min_std_dev, patch_dimensions, patches_type):
@@ -61,8 +61,8 @@ def load_model(model_path):
     # noinspection PyProtectedMember
     custom_objects = {
         'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
-        '_hard_swish': MobileNetBase._hard_swish,
-        '_relu6': MobileNetBase._relu6
+        # '_hard_swish': MobileNetBase._hard_swish,
+        # '_relu6': MobileNetBase._relu6
     }
     return tf.keras.models.load_model(model_path, custom_objects=custom_objects)
 

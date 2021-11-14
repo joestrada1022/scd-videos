@@ -4,6 +4,7 @@
     <list>
       <list>
         <remote-mappings server-id="python@cac696ae-4b11-4ff5-9b00-3886096db465" />
+        <remote-mappings server-id="python@sftp://p288722@pg-gpu.hpc.rug.nl:22/data/p288722/python_venv/scd_videos/bin/python" />
       </list>
     </list>
   </component>

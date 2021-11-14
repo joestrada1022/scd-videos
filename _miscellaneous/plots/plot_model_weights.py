@@ -4,16 +4,11 @@ import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
-from models.constrained_layer import Constrained3DKernelMinimal, CombineInputsWithConstraints
-from models.mobile_net import MobileNetBase
-
 
 def load_model(model_path):
-    # noinspection PyProtectedMember
+    from models import Constrained3DKernelMinimal, CombineInputsWithConstraints
     custom_objects = {
         'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
-        '_hard_swish': MobileNetBase._hard_swish,
-        '_relu6': MobileNetBase._relu6,
         'CombineInputsWithConstraints': CombineInputsWithConstraints
     }
     return tf.keras.models.load_model(model_path, custom_objects=custom_objects)

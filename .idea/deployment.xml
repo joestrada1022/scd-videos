@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="p288722@pg-gpu.hpc.rug.nl:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="p288722@pg-gpu.hpc.rug.nl:22 password (1)" createEmptyFolders="true" autoUploadExternalChanges="true">
     <serverData>
-      <paths name="data">
+      <paths name="A40 server">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="git_code">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="p288722@pg-gpu.hpc.rug.nl:22">
+      <paths name="Peregrine">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
@@ -26,11 +19,32 @@
       <paths name="p288722@pg-gpu.hpc.rug.nl:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/p288722/git_code/scd-videos" local="$PROJECT_DIR$" />
+            <mapping deploy="/home/p288722/git_code/scd_videos_first_revision" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="scratch">
+      <paths name="p288722@pg-gpu.hpc.rug.nl:22 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/p288722/git_code/scd_videos_first_revision" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pg-data">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pg-home">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pg-scratch">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />

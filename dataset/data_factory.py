@@ -1,21 +1,25 @@
 import itertools
 import json
+import math
 import os
 import random
 import time
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
-import math
 import numpy as np
 import tensorflow as tf
+import tensorflow_datasets as tfds
+from bm3d import bm3d
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
+# tf.data.experimental.enable_debug_mode()
 
 
 class DataFactory:
 
-    def __init__(self, width=800, height=480, batch_size=32,
-                 input_dir=None):
+    def __init__(self, width=800, height=480, batch_size=32, input_dir=None):
+
         with open(Path(input_dir).joinpath('train.json'), 'r') as f:
             self.train_data = json.load(f)
             self.class_names = np.array(sorted(self.train_data.keys()))
@@ -24,15 +28,15 @@ class DataFactory:
             random.shuffle(self.train_data)
         with open(Path(input_dir).joinpath('val.json'), 'r') as f:
             self.val_data = json.load(f)
-            self.val_data = list(itertools.chain.from_iterable(self.val_data.values()))
-            random.seed(108)
-            random.shuffle(self.val_data)
+            self.val_data = sorted(itertools.chain.from_iterable(self.val_data.values()))
+            # random.seed(108)
+            # random.shuffle(self.val_data)
         if Path(input_dir).joinpath('test.json').exists():
             with open(Path(input_dir).joinpath('test.json'), 'r') as f:
                 self.test_data = json.load(f)
-                self.test_data = list(itertools.chain.from_iterable(self.test_data.values()))
-                random.seed(108)
-                random.shuffle(self.test_data)
+                self.test_data = sorted(itertools.chain.from_iterable(self.test_data.values()))
+                # random.seed(108)
+                # random.shuffle(self.test_data)
 
         self.batch_size = batch_size
         self.img_width = width
@@ -89,6 +93,11 @@ class DataFactory:
         #                                         target_height=480,
         #                                         target_width=800)
 
+        # BM3D Denoising
+        # im_denoised = tf.py_function(func=bm3d, inp=[img, 0.02], Tout=tf.float32)
+        # additive_noise = img - im_denoised
+        # img = additive_noise
+
         return img
 
     def get_tf_train_data(self, category):
@@ -107,14 +116,15 @@ class DataFactory:
 
         print(f"Found {len(list(file_path_ds))} images in ({int(time.time() - t_start)} sec.)")
 
-        print(f"\nPrinting first 10 elements of dataset:\n")
-        for element in file_path_ds.take(10):
+        print(f"\nPrinting first 2 elements of dataset:\n")
+        for element in file_path_ds.take(2):
             k = self.process_path(element)
             print(k, element)
             break
 
         # Load actual images and create labels accordingly
         labeled_ds = file_path_ds.map(self.process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        # labeled_ds = self.pre_process(labeled_ds)
         print(f"\nFinished creating labeled dataset ({int(time.time() - t_start)} sec.)\n")
 
         # Determine number of total elements
@@ -155,14 +165,15 @@ class DataFactory:
 
         # Create labeled dataset by loading the image and estimating the label
         labeled_ds = file_path_ds.map(self.process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        # labeled_ds = self.pre_process(labeled_ds)
         labeled_ds = labeled_ds.batch(self.batch_size, drop_remainder=False)
         labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         print(f"Finished loading test frames ({int(time.time() - t_start)} sec.)")
 
         # Create dataset of file names which is necessary for evaluation
-        filename_ds = file_path_ds.map(self.get_file_name, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        # filename_ds = file_path_ds.map(self.get_file_name, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
-        return filename_ds, labeled_ds
+        return file_path_ds, labeled_ds
 
     def get_tf_val_data(self, category):
         return self.get_tf_evaluation_data(category, mode='val')
@@ -176,3 +187,17 @@ class DataFactory:
         labels_ds = ds.flat_map(lambda x, y: tf.data.Dataset.from_tensor_slices(y))
         ground_truth_labels = np.array(list(labels_ds.as_numpy_iterator())).astype(np.int32)
         return ground_truth_labels
+
+    # @staticmethod
+    # def bm3d_noise(sample):
+    #     img, label = sample
+    #     noise = img - tf.convert_to_tensor(bm3d(img.numpy(), sigma_psd=0.02))
+    #     tf.py_function(random_rotate_image, [image], [tf.float32])
+    #     return noise, img
+    #
+    # def pre_process(self, labeled_ds):
+    #     # ds = tfds.as_numpy(labeled_ds)
+    #     # ds = map(lambda x: (x[0] - bm3d(x[0], sigma_psd=0.02), x[1]), ds)
+    #     # ds = tf.data.Dataset.from_tensor_slices(ds)
+    #     ds = labeled_ds.map(self.bm3d_noise, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    #     return ds

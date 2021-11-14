@@ -1,6 +1,30 @@
 import os
+from multiprocessing import Pool, cpu_count
 
+import numpy as np
 import pandas as pd
+from PIL import Image
+from skimage.feature import greycomatrix, greycoprops
+
+
+def get_image_homogeneity(img_path):
+    # https://scikit-image.org/docs/0.18.x/api/skimage.feature.html?highlight=greycomatrix#greycomatrix
+    img_path = img_path[2:-1]
+    img_rgb = Image.open(img_path)  # reading image as grayscale
+    img = img_rgb.convert('L')
+    img = np.asarray(img, dtype=np.uint8)
+    p = greycomatrix(img, distances=[1], angles=[0, np.pi / 4, np.pi / 2, 3 * np.pi / 4], levels=256)
+    h = greycoprops(p, prop='homogeneity')
+    score = np.mean(h)
+
+    # from matplotlib import pyplot as plt
+    # plt.figure()
+    # plt.imshow(img_rgb)
+    # plt.title(f'Homogeneity score - {score}')
+    # plt.show()
+    # plt.close()
+
+    return score
 
 
 class VideoPredictor:
@@ -23,6 +47,8 @@ class VideoPredictor:
             return
 
         # Predict videos
+        # df_frame_predictions = self.__compute_homogeneity_score(df_frame_predictions)
+        # df_frame_predictions.to_csv(f_pred_file, index=False)
         video_predictions = self.__get_predictions(df_frame_predictions=df_frame_predictions)
 
         # Create dataframe based on video_predictions
@@ -84,9 +110,13 @@ class VideoPredictor:
             # for item in zip(top_3_classes, top_3_confidence):
             #     video_result.extend(item)
 
-            # Create dataframe by predicted devices and their vote count
+            # Majority Vote
             df_device_vote = df_video_predictions["Predicted Label"].value_counts().rename_axis('class').reset_index(
                 name='vote_count')
+
+            # # Weighted Majority by Homogeneity score
+            # df_device_vote = df_video_predictions.groupby(['Predicted Label'])['homogeneity_score'].sum().rename_axis(
+            #     'class').reset_index(name='vote_count')
 
             # Select top 3 devices
             df_top_votes = df_device_vote.nlargest(self.top_k_predictions, ['vote_count'])
@@ -131,3 +161,11 @@ class VideoPredictor:
         columns.append('Loss')
 
         return columns
+
+    @staticmethod
+    def __compute_homogeneity_score(pred_df):
+        pool = Pool(cpu_count())
+        homogeneity_scores = pool.map(get_image_homogeneity, [x for x in pred_df['File']])
+        pool.close()
+        pred_df = pred_df.assign(homogeneity_score=pd.Series(homogeneity_scores).values)
+        return pred_df

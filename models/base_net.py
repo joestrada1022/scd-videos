@@ -3,25 +3,27 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import TensorBoard
 
-from utils.callbacks.lr_scheduler import WarmUpCosineDecayScheduler
-from utils.callbacks.predictions import PredictionsCallback
+from utils.callbacks import WarmUpCosineDecayScheduler
+from utils.callbacks import PredictionsCallback
 
 
 class BaseNet(abc.ABC):
-    def __init__(self, constrained_net, num_batches, global_results_dir, model_path=None):
+    def __init__(self, num_batches, global_results_dir, const_type=None, model_path=None, lr=0.1):
         self.num_batches = num_batches
         self.model = None
         self.model_path = None
         if model_path is not None:
             self.set_model(model_path)
+        self.lr = lr
 
         self.verbose = False
         self.model_name = None
 
         # Constrained layer properties
-        self.constrained_net = constrained_net
+        assert const_type in {None, 'guru', 'derrick'}
+        self.const_type = const_type
         self.constrained_n_filters = 3
         self.constrained_kernel_size = 5
 
@@ -53,9 +55,11 @@ class BaseNet(abc.ABC):
     def compile(self):
         # custom_loss = self.make_custom_loss(self.model)
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                           optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.95, decay=0.0005),
-                           metrics=["acc"])
-        self.model.run_eagerly = True
+                           optimizer=tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
+                           metrics=["acc"],
+                           # run_eagerly=True
+                           )
+        # self.model.run_eagerly = True
 
     def get_tensorboard_path(self):
         if self.model_name is None:
@@ -122,7 +126,7 @@ class BaseNet(abc.ABC):
         save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
                                                            verbose=0,
                                                            save_weights_only=False,
-                                                           period=1)
+                                                           save_freq='epoch')   # period=1 (for older ver of TensorFlow)
 
         tensorboard_cb = TensorBoard(log_dir=str(self.get_tensorboard_path()))
 
@@ -136,12 +140,12 @@ class BaseNet(abc.ABC):
         #     verbose=1)
 
         steps_per_epoch = tf.data.experimental.cardinality(train_ds).numpy()
-        warm_up_epochs = 3
-        lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=0.1,
+        warm_up_epochs = 0.25 if epochs < 3 else 3
+        lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=self.lr,
                                                  total_steps=epochs * steps_per_epoch,
                                                  global_step_init=completed_epochs * steps_per_epoch,
                                                  warmup_learning_rate=0,
-                                                 warmup_steps=warm_up_epochs * steps_per_epoch,
+                                                 warmup_steps=int(warm_up_epochs * steps_per_epoch),
                                                  hold_base_rate_steps=0,
                                                  verbose=1)
 

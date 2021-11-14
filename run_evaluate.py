@@ -2,14 +2,9 @@ import argparse
 import os
 from pathlib import Path
 
-from dataset.data_factory import DataFactory
-from models.efficient_net import EfficientNet
-from utils.predict_utils.frame_prediction_statistics import FramePredictionStatistics
-from utils.predict_utils.frame_prediction_visualization import FramePredictionVis
-from utils.predict_utils.predict_frames import FramePredictor
-from utils.predict_utils.predict_videos import VideoPredictor
-from utils.predict_utils.video_prediction_statistics import VideoPredictionStatistics
-from utils.predict_utils.video_prediction_visualization import VideoPredictionVis
+from dataset import DataFactory
+from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, FramePredictor,
+                                 VideoPredictionStatistics, VideoPredictionVis, VideoPredictor)
 
 
 def get_models_files(input_dir, models):
@@ -63,22 +58,16 @@ if __name__ == "__main__":
 
     parser.add_argument('--input_dir', type=str, required=True,
                         help='Path to directory consisting of .h5-models (to use for predicting)')
-    parser.add_argument('--models', type=str, required=False,
-                        help='Models within input dir (*.h5) to evaluate. Separate models by a ",". ')
-    parser.add_argument('--constrained', type=int, required=False, default=1,
-                        help='Constrained layer included (0=no, 1=yes)')
+    parser.add_argument('--models', type=str,
+                        help='Models within input dir (*.h5) to evaluate. Separate models by a ","')
     parser.add_argument('--dataset', type=str, required=True, help='Dataset to use to make predictions')
-    parser.add_argument('--batch_size', type=int, required=False, default=64, help='Batch size')
-    parser.add_argument('--height', type=int, required=False, default=480,
-                        help='Height of CNN input dimension [default=480]')
-    parser.add_argument('--width', type=int, required=False, default=800,
-                        help='Width of CNN input dimension [default=800]')
-    parser.add_argument('--category', type=str, required=False, help='enter "native", "whatsapp", or "youtube"')
-    parser.add_argument('--suffix', type=str, required=False, help='enter suffix string for the predictions folder')
-    parser.add_argument('--gpu_id', type=int, required=False, default=0,
-                        help='Choose the available GPU devices')
-    parser.add_argument('--epoch', type=int, required=False, default=-1, help='Choose the epoch')
-    parser.add_argument('--net_type', type=str, required=True, default='mobile', help='Net type - mobile, eff, or misl')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
+    parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
+    parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
+    parser.add_argument('--category', type=str, help='enter "native", "whatsapp", or "youtube"')
+    parser.add_argument('--suffix', type=str, help='enter suffix string for the predictions folder')
+    parser.add_argument('--gpu_id', type=int, default=0, help='Choose the available GPU devices')
+    parser.add_argument('--epoch', type=int, default=-1, help='Choose the epoch')
     parser.add_argument('--eval_set', type=str, required=True, default='val', help='Evaluation set - val or test')
 
     args = parser.parse_args()
@@ -88,15 +77,15 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     height = args.height
     width = args.width
-    constrained = args.constrained == 1
     category = args.category
     gpu_id = args.gpu_id
     suffix = args.suffix
     epoch = args.epoch
-    net_type = args.net_type
     eval_set = args.eval_set
 
     import tensorflow as tf
+
+    # tf.config.run_functions_eagerly(True)
 
     physical_devices = tf.config.list_physical_devices('GPU')
     if len(physical_devices):
@@ -112,59 +101,35 @@ if __name__ == "__main__":
         model_files = [x for x in model_files if str(epoch).zfill(5) in x]
     print(f"Found {len(model_files)} files for model {model_name}")
 
-    if net_type == 'eff':
-        eff_net = EfficientNet(constrained_net=constrained,
-                               global_results_dir=Path(model_input_dir).parent.parent)
-        eff_net.create_model(num_outputs=28, model_name=Path(model_input_dir).parent.name)
+    dataset = DataFactory(input_dir=dataset_path, batch_size=batch_size, height=height, width=width)
+    if eval_set == 'val':
+        filename_ds, eval_ds = dataset.get_tf_val_data(category=category)
+    elif eval_set == 'test':
+        filename_ds, eval_ds = dataset.get_tf_test_data(category=category)
+    else:
+        raise ValueError('Invalid evaluation set')
+    # List containing only the file names of items in evaluation set
+    eval_ds_filepaths = list(filename_ds.as_numpy_iterator())
 
     for model_file in model_files:
-        # quick test to determine if both frame and video results are already computed:
-        if net_type == 'eff':
-            frames_results = Path(FramePredictor(model_dir=model_input_dir, input_dir=dataset_path,
-                                                 model_file_name=model_file, result_dir=frames_res_dir,
-                                                 weights_only=True, model_class=eff_net).get_output_file())
-        else:
-            frames_results = Path(FramePredictor(model_dir=model_input_dir, input_dir=dataset_path,
-                                                 model_file_name=model_file,
-                                                 result_dir=frames_res_dir).get_output_file())
-        videos_results = Path(VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir).get_output_file())
+        frame_predictor = FramePredictor(model_dir=model_input_dir, model_file_name=model_file,
+                                         result_dir=frames_res_dir, input_dir=dataset_path)
+        video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir)
+
+        frames_results = Path(frame_predictor.get_output_file())
+        videos_results = Path(video_predictor.get_output_file())
 
         if not (frames_results.exists() and videos_results.exists()):
-
             print(f"{model_file} | Start prediction process")
-            # Predict Frames
-            if net_type == 'eff':
-                frame_predictor = FramePredictor(model_dir=model_input_dir, model_file_name=model_file,
-                                                 result_dir=frames_res_dir, input_dir=dataset_path, weights_only=True,
-                                                 model_class=eff_net)
-            else:
-                frame_predictor = FramePredictor(model_dir=model_input_dir, model_file_name=model_file,
-                                                 result_dir=frames_res_dir,
-                                                 input_dir=dataset_path)
-            if not Path(frame_predictor.get_output_file()).exists():
-                # Re-create dataset for each model to make sure the test-generator does not mess up.
-                dataset = DataFactory(input_dir=dataset_path, batch_size=batch_size, height=height, width=width)
-                if eval_set == 'val':
-                    filename_ds, eval_ds = dataset.get_tf_val_data(category=category)
-                elif eval_set == 'test':
-                    filename_ds, eval_ds = dataset.get_tf_test_data(category=category)
-                else:
-                    raise ValueError('Invalid evaluation set')
 
-                # List containing only the file names of items in evaluation set
-                eval_ds_filenames = list(filename_ds.as_numpy_iterator())
-
+            if not frames_results.exists():
                 print(f"{model_file} | Start predicting frames")
-
-                frame_predictor.start(test_ds=eval_ds, filenames=eval_ds_filenames)
+                frame_predictor.start(test_ds=eval_ds, filenames=eval_ds_filepaths)
                 print(f"{model_file} | Predicting frames completed")
 
-            # Predict Videos which is based on the predicted frames
-            video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir)
-            if not Path(video_predictor.get_output_file()).exists():
+            if not videos_results.exists():
                 print(f"{model_file} | Start predicting videos")
-                # Use frame prediction file as input
-                video_predictor.start(frame_predictor.get_output_file())
+                video_predictor.start(frame_prediction_file=str(frames_results))
                 print(f"{model_file} | Predicting videos completed")
 
     print(f"Creating Statistics and Visualizations ...")

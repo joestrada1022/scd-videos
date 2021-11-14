@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from keras.constraints import Constraint
+from tensorflow.keras.constraints import Constraint
 
 
 class CombineInputsWithConstraints(tf.keras.layers.Layer):
