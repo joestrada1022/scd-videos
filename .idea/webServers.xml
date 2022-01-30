@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="a837cd5d-c618-408f-8827-830397b6e41f" name="pg-scratch">
+        <fileTransfer rootFolder="/scratch/p288722/" accessType="SFTP" host="pg-gpu.hpc.rug.nl" port="22" sshConfigId="1b816b44-6533-4725-a5f6-a4d672259d33" sshConfig="p288722@pg-gpu.hpc.rug.nl:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="30000" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="78f1a227-cbeb-4da4-86c2-a5538ddb2413" name="pg-home">
+        <fileTransfer rootFolder="/home/p288722/" accessType="SFTP" host="pg-gpu.hpc.rug.nl" port="22" sshConfigId="1b816b44-6533-4725-a5f6-a4d672259d33" sshConfig="p288722@pg-gpu.hpc.rug.nl:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="30000" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="b0ca10f4-655d-4ddd-99c3-e1009dfe3a60" name="pg-data">
+        <fileTransfer rootFolder="/data/p288722/" accessType="SFTP" host="pg-gpu.hpc.rug.nl" port="22" sshConfigId="1b816b44-6533-4725-a5f6-a4d672259d33" sshConfig="p288722@pg-gpu.hpc.rug.nl:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="30000" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

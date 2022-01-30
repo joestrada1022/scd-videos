@@ -13,17 +13,13 @@ sys.path.insert(1, '/home/p288722/git_code/scd-videos')
 
 from dataset.data_factory import DataFactory
 from models.constrained_layer import Constrained3DKernelMinimal, CombineInputsWithConstraints
-from models.mobile_net import MobileNetBase
 
 
 def load_model(model_path):
     # noinspection PyProtectedMember
     custom_objects = {
         'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
-        '_hard_swish': MobileNetBase._hard_swish,
-        '_relu6': MobileNetBase._relu6,
         'CombineInputsWithConstraints': CombineInputsWithConstraints,
-
     }
     return tf.keras.models.load_model(model_path, custom_objects=custom_objects)
 

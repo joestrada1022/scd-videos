@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+tf.config.run_functions_eagerly(True)
 from tensorflow.keras.callbacks import TensorBoard
 
 from utils.callbacks import WarmUpCosineDecayScheduler
@@ -44,10 +45,16 @@ class BaseNet(abc.ABC):
         self.model_path = model_path
         self.model_name = model_name
 
-        self.model.load_weights(model_path)
-
         if self.model is None:
-            raise ValueError(f"Model could not be loaded from location {model_path}")
+            from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, SupervisedContrastiveLoss
+            custom_objects = {
+                'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
+                'CombineInputsWithConstraints': CombineInputsWithConstraints,
+                'SupervisedContrastiveLoss': SupervisedContrastiveLoss,
+            }
+            self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
+        else:
+            self.model.load_weights(model_path)
 
     def create_model(self, **kwargs):
         raise NotImplementedError('method create_model is not implemented')
@@ -57,9 +64,9 @@ class BaseNet(abc.ABC):
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
                            optimizer=tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
                            metrics=["acc"],
-                           # run_eagerly=True
+                           run_eagerly=True
                            )
-        # self.model.run_eagerly = True
+        self.model.run_eagerly = True
 
     def get_tensorboard_path(self):
         if self.model_name is None:
@@ -126,7 +133,7 @@ class BaseNet(abc.ABC):
         save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
                                                            verbose=0,
                                                            save_weights_only=False,
-                                                           save_freq='epoch')   # period=1 (for older ver of TensorFlow)
+                                                           save_freq='epoch')  # period=1 (for older ver of TensorFlow)
 
         tensorboard_cb = TensorBoard(log_dir=str(self.get_tensorboard_path()))
 

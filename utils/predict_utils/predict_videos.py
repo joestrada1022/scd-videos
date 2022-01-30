@@ -1,30 +1,7 @@
 import os
-from multiprocessing import Pool, cpu_count
 
-import numpy as np
 import pandas as pd
-from PIL import Image
-from skimage.feature import greycomatrix, greycoprops
-
-
-def get_image_homogeneity(img_path):
-    # https://scikit-image.org/docs/0.18.x/api/skimage.feature.html?highlight=greycomatrix#greycomatrix
-    img_path = img_path[2:-1]
-    img_rgb = Image.open(img_path)  # reading image as grayscale
-    img = img_rgb.convert('L')
-    img = np.asarray(img, dtype=np.uint8)
-    p = greycomatrix(img, distances=[1], angles=[0, np.pi / 4, np.pi / 2, 3 * np.pi / 4], levels=256)
-    h = greycoprops(p, prop='homogeneity')
-    score = np.mean(h)
-
-    # from matplotlib import pyplot as plt
-    # plt.figure()
-    # plt.imshow(img_rgb)
-    # plt.title(f'Homogeneity score - {score}')
-    # plt.show()
-    # plt.close()
-
-    return score
+import numpy as np
 
 
 class VideoPredictor:
@@ -36,16 +13,14 @@ class VideoPredictor:
         self.top_k_predictions = 3
 
     def start(self, frame_prediction_file):
-        # Start predicting video labels
-        return self.__predict_and_save(frame_prediction_file)
-
-    def __predict_and_save(self, f_pred_file):
         # Read file with frame predictions
-        df_frame_predictions = pd.read_csv(f_pred_file)
+        df_frame_predictions = pd.read_csv(frame_prediction_file)
         if len(df_frame_predictions) == 0:
-            print(f"No frame predictions found in {str(f_pred_file)}")
+            print(f"No frame predictions found in {str(frame_prediction_file)}")
             return
+        return self._predict_and_save(df_frame_predictions)
 
+    def _predict_and_save(self, df_frame_predictions, output_file=None):
         # Predict videos
         # df_frame_predictions = self.__compute_homogeneity_score(df_frame_predictions)
         # df_frame_predictions.to_csv(f_pred_file, index=False)
@@ -54,7 +29,8 @@ class VideoPredictor:
         # Create dataframe based on video_predictions
         df_results = pd.DataFrame(video_predictions, columns=self.__get_columns(self.top_k_predictions))
 
-        output_file = self.get_output_file()
+        if not output_file:
+            output_file = self.get_output_file()
         df_results.to_csv(output_file, index=False)
 
         return output_file
@@ -78,6 +54,8 @@ class VideoPredictor:
         # Determine unique videos
         videos = df_frame_predictions["File"].str.split("-").str[0].unique()
         print(f"Total number of videos to classify: {len(videos)}.")
+        # range_mid_point = 0.6150  # best max homogeneity score (test set)
+        range_mid_point = 0.5389    # best mean homogeneity score (test set)
 
         video_predictions = []
         for video in videos:
@@ -91,8 +69,8 @@ class VideoPredictor:
 
             # Select n_frames random rows. This can be used to experiment with predictions by using
             # different number of frames per video.
-            if n_frames < len(df_video_predictions):
-                df_video_predictions = df_video_predictions.sample(n=n_frames)
+            # if n_frames < len(df_video_predictions):
+            #     df_video_predictions = df_video_predictions.sample(n=n_frames)
 
             # softmax_scores = []
             # for index in np.ravel(df_video_predictions["Softmax Scores"].axes):
@@ -114,9 +92,30 @@ class VideoPredictor:
             df_device_vote = df_video_predictions["Predicted Label"].value_counts().rename_axis('class').reset_index(
                 name='vote_count')
 
+            n = 50  # num_frames_to_consider
+            # df = df_video_predictions.sort_values(by='homogeneity_score_mean', ascending=False)[:n]
+            # df_device_vote = df["Predicted Label"].value_counts().rename_axis('class').reset_index(name='vote_count')
+
+            # distance = np.abs(df_video_predictions['mean_homogeneity'] - range_mid_point).values
+            # df_video_predictions = df_video_predictions.assign(dist_from_selected_homo_score=distance)
+            # df = df_video_predictions.sort_values(by='dist_from_selected_homo_score')[:n]
+            # df_device_vote = df["Predicted Label"].value_counts().rename_axis('class').reset_index(name='vote_count')
+
+            # df = df_video_predictions.sort_values(by='max_homogeneity', ascending=False)[:n]
+            # df_device_vote = df["Predicted Label"].value_counts().rename_axis('class').reset_index(name='vote_count')
+
             # # Weighted Majority by Homogeneity score
             # df_device_vote = df_video_predictions.groupby(['Predicted Label'])['homogeneity_score'].sum().rename_axis(
             #     'class').reset_index(name='vote_count')
+
+            # n = 50  # num_frames_to_consider
+            # temp_df = df_video_predictions.sort_values(by='homogeneity_score_mean', ascending=False)[:n]
+            # df_device_vote = temp_df["Predicted Label"].value_counts().rename_axis('class').reset_index(
+            #     name='vote_count')
+            #
+            # temp_df = df_video_predictions.sort_values(by='homogeneity_score_max', ascending=False)[:n]
+            # df_device_vote = temp_df["Predicted Label"].value_counts().rename_axis('class').reset_index(
+            #     name='vote_count')
 
             # Select top 3 devices
             df_top_votes = df_device_vote.nlargest(self.top_k_predictions, ['vote_count'])
@@ -162,10 +161,4 @@ class VideoPredictor:
 
         return columns
 
-    @staticmethod
-    def __compute_homogeneity_score(pred_df):
-        pool = Pool(cpu_count())
-        homogeneity_scores = pool.map(get_image_homogeneity, [x for x in pred_df['File']])
-        pool.close()
-        pred_df = pred_df.assign(homogeneity_score=pd.Series(homogeneity_scores).values)
-        return pred_df
+

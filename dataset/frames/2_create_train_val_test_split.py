@@ -20,8 +20,8 @@ if __name__ == "__main__":
     - Use 6 native videos (2 Flat, 2 Indoor, and 2 Outdoor) for test + corresponding WA and YT versions
     - Use 3 native videos (1 Flat, 1 Indoor, and 1 Outdoor) for validation + corresponding WA and YT versions
     
-    Note - The above scheme is honored subject to availability of the videos in the VISION dataset. This strategy
-    ensures that the videos are equally distributed both w.r.t scenarios and compression types.
+    Note - The above scheme is subject to availability of the videos in the VISION dataset. This strategy of dataset
+    split ensures that the videos are equally distributed both with respect to scenarios and compression types.
     """
 
     parser = argparse.ArgumentParser(
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         help='Number of frames to sample from each video. A special value of "-1" indicates to '
                              'copy all the available frames (results in imbalanced data)')
     parser.add_argument('--dest_path', type=Path, required=True, help='enter the destination path')
-    parser.add_argument('--frames_dataset', type=Path, default=Path(r'/scratch/p288722/datasets/vision/all_frames'))
+    parser.add_argument('--frames_dataset', type=Path, default=Path(r'/scratch/p288722/datasets/vision/all_I_frames'))
 
     args = parser.parse_args()
     num_frames = args.num_frames
@@ -95,11 +95,14 @@ if __name__ == "__main__":
                 selected_frames = frames
             else:
                 available_frames_count = len(frames)
-                assert num_frames_to_select <= available_frames_count
+                # assert num_frames_to_select <= available_frames_count
+                if num_frames_to_select > available_frames_count:
+                    print(f'Warning: Fewer than {num_frames_to_select} frames are available for the '
+                          f'video: {video_path.name}. Consists of only {available_frames_count} frames')
 
                 # Select `num_frames_to_select` frames equally spaced in time
                 selected_frames = []
-                time_interval = int(math.floor(available_frames_count / num_frames_to_select))
+                time_interval = max(1, int(math.floor(available_frames_count / num_frames_to_select)))
                 for index in range(0, available_frames_count, time_interval):
                     selected_frames.append(frames[index])
                 selected_frames = selected_frames[:num_frames_to_select]
