@@ -2,49 +2,7 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="Always" serverName="p288722@pg-gpu.hpc.rug.nl:22 password (1)" createEmptyFolders="true" autoUploadExternalChanges="true">
     <serverData>
-      <paths name="A40 server">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="Peregrine">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="p288722@pg-gpu.hpc.rug.nl:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/p288722/git_code/scd_videos_first_revision" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="p288722@pg-gpu.hpc.rug.nl:22 password (1)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/p288722/git_code/scd_videos_first_revision" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pg-data">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pg-home">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pg-scratch">
+      <paths name="scd_videos_first_revision">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
