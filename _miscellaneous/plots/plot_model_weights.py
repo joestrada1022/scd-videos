@@ -6,10 +6,11 @@ from matplotlib import pyplot as plt
 
 
 def load_model(model_path):
-    from models import Constrained3DKernelMinimal, CombineInputsWithConstraints
+    from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, PPCCELoss
     custom_objects = {
         'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
-        'CombineInputsWithConstraints': CombineInputsWithConstraints
+        'CombineInputsWithConstraints': CombineInputsWithConstraints,
+        'PPCCELoss': PPCCELoss
     }
     return tf.keras.models.load_model(model_path, custom_objects=custom_objects)
 

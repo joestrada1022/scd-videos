@@ -141,6 +141,32 @@ class VideoPredictionStatistics:
                 loss_WA, loss_YT, loss_original,
                 vc_WA, vc_YT, vc_original]
 
+    @staticmethod
+    def __get_whatsapp_youtube_scenario_statistics(df_video_predictions):
+
+        df_flat = df_video_predictions[df_video_predictions["filename"].str.contains("flat")]
+        df_indoor = df_video_predictions[df_video_predictions["filename"].str.contains("indoor")]
+        df_outdoor = df_video_predictions[df_video_predictions["filename"].str.contains("outdoor")]
+
+        df_whatsapp_flat = df_flat[df_flat["platform"] == "WA"]
+        df_whatsapp_indoor = df_indoor[df_indoor["platform"] == "WA"]
+        df_whatsapp_outdoor = df_outdoor[df_outdoor["platform"] == "WA"]
+
+        acc_whatsapp_flat = round(df_whatsapp_flat["correct"].mean(), 3)
+        acc_whatsapp_indoor = round(df_whatsapp_indoor["correct"].mean(), 3)
+        acc_whatsapp_outdoor = round(df_whatsapp_outdoor["correct"].mean(), 3)
+
+        df_youtube_flat = df_flat[df_flat["platform"] == "YT"]
+        df_youtube_indoor = df_indoor[df_indoor["platform"] == "YT"]
+        df_youtube_outdoor = df_outdoor[df_outdoor["platform"] == "YT"]
+
+        acc_youtube_flat = round(df_youtube_flat["correct"].mean(), 3)
+        acc_youtube_indoor = round(df_youtube_indoor["correct"].mean(), 3)
+        acc_youtube_outdoor = round(df_youtube_outdoor["correct"].mean(), 3)
+
+        return [acc_whatsapp_flat, acc_whatsapp_indoor, acc_whatsapp_outdoor,
+                acc_youtube_flat, acc_youtube_indoor, acc_youtube_outdoor]
+
     def __get_statistics(self, file):
         file_path = os.path.join(self.result_dir, file)
         df_video_predictions = pd.read_csv(file_path)
@@ -180,6 +206,11 @@ class VideoPredictionStatistics:
         metrics = self.__get_metrics(df_video_predictions)
         # Append metrics to result set
         result.extend(metrics)
+
+        # Get statistics per scenario for whatsapp/youtube videos
+        whatsapp_youtube_scenario_statistics = self.__get_whatsapp_youtube_scenario_statistics(df_video_predictions)
+        # Append statistics to result set
+        result.extend(whatsapp_youtube_scenario_statistics)
 
         return result
 
@@ -230,7 +261,9 @@ class VideoPredictionStatistics:
                 "precision", "recall", "f1",
                 "precision_flat", "recall_flat", "f1_flat",
                 "precision_indoor", "recall_indoor", "f1_indoor",
-                "precision_outdoor", "recall_outdoor", "f1_outdoor"]
+                "precision_outdoor", "recall_outdoor", "f1_outdoor",
+                "acc_WA_flat", "acc_WA_indoor", "acc_WA_outdoor",
+                "acc_YT_flat", "acc_YT_indoor", "acc_YT_outdoor"]
 
     def __empty_row(self):
         num_cols = len(self.__get_columns())

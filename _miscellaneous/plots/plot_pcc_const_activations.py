@@ -12,7 +12,7 @@ from tqdm import tqdm
 sys.path.insert(1, '/home/p288722/git_code/scd-videos')
 
 from dataset.data_factory import DataFactory
-from models.constrained_layer import Constrained3DKernelMinimal, CombineInputsWithConstraints
+from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, PPCCELoss
 
 
 def load_model(model_path):
@@ -20,6 +20,7 @@ def load_model(model_path):
     custom_objects = {
         'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
         'CombineInputsWithConstraints': CombineInputsWithConstraints,
+        'PPCCELoss': PPCCELoss
     }
     return tf.keras.models.load_model(model_path, custom_objects=custom_objects)
 

@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+
 tf.config.run_functions_eagerly(True)
 from tensorflow.keras.callbacks import TensorBoard
 
@@ -46,11 +47,13 @@ class BaseNet(abc.ABC):
         self.model_name = model_name
 
         if self.model is None:
-            from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, SupervisedContrastiveLoss
+            from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, \
+                SupervisedContrastiveLoss, PPCCELoss
             custom_objects = {
                 'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
                 'CombineInputsWithConstraints': CombineInputsWithConstraints,
                 'SupervisedContrastiveLoss': SupervisedContrastiveLoss,
+                'PPCCELoss': PPCCELoss,
             }
             self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
         else:
@@ -135,7 +138,7 @@ class BaseNet(abc.ABC):
                                                            save_weights_only=False,
                                                            save_freq='epoch')  # period=1 (for older ver of TensorFlow)
 
-        tensorboard_cb = TensorBoard(log_dir=str(self.get_tensorboard_path()))
+        tensorboard_cb = TensorBoard(log_dir=str(self.get_tensorboard_path()), update_freq='batch')
 
         # lr_callback = tf.keras.callbacks.LearningRateScheduler(
         #     schedule=tf.keras.optimizers.schedules.ExponentialDecay(

@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D
 
-from . import BaseNet, Constrained3DKernelMinimal
+from . import BaseNet, Constrained3DKernelMinimal, PPCCELoss
 
 
 class MobileNet(BaseNet):
@@ -13,7 +13,7 @@ class MobileNet(BaseNet):
         assert const_type in {None, 'guru', 'derrick'}
         self.const_type = const_type
 
-    def create_model(self, num_outputs, height, width, model_name=None, use_pretrained=True):
+    def create_model(self, num_outputs, height, width, distance_matrix, model_name=None, use_pretrained=True):
         self.model_name = model_name  # fixme: This should ideally be in the __init__
         input_shape = (height, width, 3)
 
@@ -36,12 +36,21 @@ class MobileNet(BaseNet):
                 self.model
             ])
 
+        self.distance_matrix = distance_matrix
         self.compile()
         return self.model
+
+    # def compile(self):
+    #     self.model.compile(loss=PPCCELoss(self.distance_matrix),
+    #                        optimizer=tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
+    #                        metrics=["acc"],
+    #                        run_eagerly=True
+    #                        )
+    #     self.model.run_eagerly = True
 
 
 if __name__ == '__main__':
     net = MobileNet(num_batches=10, global_results_dir=Path('.'), const_type=None, model_path=None)
-    m = net.create_model(num_outputs=28, height=480, width=800, model_name=None, use_pretrained=True)
+    m = net.create_model(num_outputs=28, height=480, width=800, class_names=None, model_name=None, use_pretrained=True)
 
     print(' ')

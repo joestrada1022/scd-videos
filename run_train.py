@@ -68,6 +68,7 @@ def run_flow():
                                width=p.width,
                                homogeneous_frames=p.homo_or_not)
 
+    distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.get_class_names())
     train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)
     filename_ds, val_ds = data_factory.get_tf_val_data(category=p.category)
@@ -77,7 +78,7 @@ def run_flow():
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
         else:
-            net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
+            net.create_model(num_classes, p.height, p.width, distance_matrix, p.model_name, p.use_pretrained)
 
     elif p.net_type == 'eff':
         net = EfficientNet(num_batches, p.global_results_dir, p.const_type)

@@ -24,17 +24,18 @@ class FramePredictor:
         self.homogeneity_csv = homogeneity_csv
 
         # Load model
-        from models import Constrained3DKernelMinimal, CombineInputsWithConstraints
+        from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, PPCCELoss
         model_path = os.path.join(model_dir, model_file_name)
         custom_objects = {
             'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
-            'CombineInputsWithConstraints': CombineInputsWithConstraints
+            'CombineInputsWithConstraints': CombineInputsWithConstraints,
+            'PPCCELoss': PPCCELoss,
         }
         if weights_only:  # fixme: deprecated functionality
             model_class.model.load_weights(model_path)
             self.model = model_class.model
         else:
-            self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
+            self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
 
     def start(self, test_ds, filenames):
         output_file = self.get_output_file()

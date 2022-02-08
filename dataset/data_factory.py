@@ -16,6 +16,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 # tf.data.experimental.enable_debug_mode()
 tf.config.run_functions_eagerly(True)
 
+
 # GlcmProperties = namedtuple('GlcmProperties', ['File',
 #                                                'mean_contrast', 'max_contrast',
 #                                                'mean_dissimilarity', 'max_dissimilarity',
@@ -309,3 +310,21 @@ class DataFactory:
         """
         ds = labeled_ds.map(self.center_crop_wrapper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
         return ds
+
+    def get_distance_matrix(self):
+        intra_class_distance = np.ndarray(shape=(len(self.class_names), len(self.class_names)))
+        for row_id, device in enumerate(self.class_names):
+            brand = device.split('_')[1]
+            for col_id, device in enumerate(self.class_names):
+                if row_id == col_id:
+                    intra_class_distance[row_id][col_id] = 0.0
+                elif brand in device:
+                    intra_class_distance[row_id][col_id] = 0.00001
+                else:
+                    intra_class_distance[row_id][col_id] = 0.99999
+
+        intra_class_distance = tf.convert_to_tensor(intra_class_distance)
+        # intra_class_distance = intra_class_distance / tf.math.reduce_sum(intra_class_distance, axis=1, keepdims=True)
+        return tf.cast(intra_class_distance, dtype=tf.float32)
+
+
