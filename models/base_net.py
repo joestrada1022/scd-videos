@@ -149,19 +149,27 @@ class BaseNet(abc.ABC):
         #     # ),
         #     verbose=1)
 
-        steps_per_epoch = tf.data.experimental.cardinality(train_ds).numpy()
-        warm_up_epochs = 0.25 if epochs < 3 else 3
-        lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=self.lr,
-                                                 total_steps=epochs * steps_per_epoch,
-                                                 global_step_init=completed_epochs * steps_per_epoch,
-                                                 warmup_learning_rate=0,
-                                                 warmup_steps=int(warm_up_epochs * steps_per_epoch),
-                                                 hold_base_rate_steps=0,
-                                                 verbose=1)
+        # steps_per_epoch = tf.data.experimental.cardinality(train_ds).numpy()
+        # warm_up_epochs = 0.25 if epochs < 3 else 3
+        # lr_callback = WarmUpCosineDecayScheduler(learning_rate_base=self.lr,
+        #                                          total_steps=epochs * steps_per_epoch,
+        #                                          global_step_init=completed_epochs * steps_per_epoch,
+        #                                          warmup_learning_rate=0,
+        #                                          warmup_steps=int(warm_up_epochs * steps_per_epoch),
+        #                                          hold_base_rate_steps=0,
+        #                                          verbose=1)
 
         # print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
+        lr_callback = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
 
         return [save_model_cb, tensorboard_cb, lr_callback]
+
+    @staticmethod
+    def scheduler(epoch, lr):
+        if epoch != 0 and epoch % 6 == 0:
+            return lr / 2
+        else:
+            return lr
 
     def evaluate(self, test_ds, model_path=None):
         if model_path is not None:

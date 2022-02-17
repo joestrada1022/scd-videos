@@ -12,7 +12,7 @@ from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, 
 def get_models_files(input_dir, models_to_process):
     # Get all files (i.e. models) from input directory
     files_list = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
-    files_list = sorted(files_list)
+    files_list = [sorted(files_list)[-1]]  # picking the last trained model
     print(f"Found {len(files_list)} files in {input_dir}: {files_list}")
 
     if models_to_process:

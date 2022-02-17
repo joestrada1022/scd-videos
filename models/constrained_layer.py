@@ -131,11 +131,11 @@ class Constrained3DKernelMinimal(Constraint):
         center_zero_mask = np.ones(w.shape)
         center_zero_mask[center, center, :, :] = 0
         w *= center_zero_mask
-        w = tf.math.divide(w, tf.reduce_sum(w, axis=[0, 1], keepdims=True))
+        w = tf.math.divide(w, tf.reduce_sum(w, axis=[0, 1], keepdims=True)) * 10000
 
         # 3. Set the center value to -1
         center_one_mask = np.zeros(w.shape)
-        center_one_mask[center, center, :, :] = 1
+        center_one_mask[center, center, :, :] = 10000
         w = tf.math.subtract(w, center_one_mask)
 
         return w
@@ -172,7 +172,7 @@ class Constrained3DKernelMinimal(Constraint):
     @staticmethod
     def __constraint_derrick_et_al_with_transpose(w):
         w_original_shape = w.shape
-        w = w * 10000  # scale by 10k to prevent numerical issues
+        # w = w * 10000  # scale by 10k to prevent numerical issues
 
         # 1. Reshaping of 'w'
         x, y, z, n_kernels = w_original_shape[0], w_original_shape[1], w_original_shape[2], w_original_shape[3]
@@ -187,11 +187,11 @@ class Constrained3DKernelMinimal(Constraint):
 
         # 3. Normalize values w.r.t xy-planes
         xy_plane_sum = tf.reduce_sum(w, [2, 3], keepdims=True)  # Recall new shape of w: (n_kernels, z, y, x).
-        w = tf.math.divide(w, xy_plane_sum)  # Divide each element by its corresponding xy-plane sum-value
+        w = tf.math.divide(w, xy_plane_sum) * 10000  # Divide each element by its corresponding xy-plane sum-value
 
         # 4. Set center values of 'w' to negative one by subtracting mask-matrix from 'w'
         center_one_mask = np.zeros(new_shape)
-        center_one_mask[:, :, center, center] = 1
+        center_one_mask[:, :, center, center] = 10000
         w = tf.math.subtract(w, center_one_mask)
 
         # Reshape 'w' to original shape and return
