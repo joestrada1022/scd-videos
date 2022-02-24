@@ -49,7 +49,7 @@ def frame_selection(args, device, video):
 
 
 def get_frames_dataset(split, args):
-    video_level_split = Path(__file__).resolve().parent.parent.joinpath(f'split/{split}_videos.json')
+    video_level_split = Path(__file__).resolve().parent.joinpath(f'split/{split}_videos.json')
     with open(video_level_split) as f:
         videos_per_device = json.load(f)
 

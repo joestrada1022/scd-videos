@@ -10,11 +10,10 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageFile
 
-from dataset.frames import get_frames_dataset
+from .frame_selection import get_frames_dataset
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-# tf.data.experimental.enable_debug_mode()
 tf.config.run_functions_eagerly(True)
 
 

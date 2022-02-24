@@ -5,7 +5,7 @@ import tensorflow as tf
 
 tf.config.run_functions_eagerly(True)
 
-from dataset import DataFactory
+import dataset
 from models import (MISLNet, MobileNet, EfficientNet, ResNet, MobileNetContrastive, ResNetContrastive,
                     EfficientNetB0Contrastive)
 
@@ -28,16 +28,13 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Dataset params
+    parser.add_argument('--dataset_name', type=str, choices=['vision', 'qufvd'])
     parser.add_argument('--all_I_frames_dir', type=Path, help='Input directory of extracted I frames')
     parser.add_argument('--all_frames_dir', type=Path, help='Input directory of extracted frames')
     parser.add_argument('--frame_selection', type=str, default='equally_spaced', choices=['equally_spaced', 'first_N'])
     parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
     parser.add_argument('--fpv', type=int, default=50, help='max number of frames per video (set -1 for all frames)')
     parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube"])
-    parser.add_argument('--homo_or_not', type=none_or_bool, default=None,
-                        help='Filter dataset by homogeneous frames if `True`, or'
-                             'Filter dataset by non-homogeneous frames if `False`, or '
-                             'Do not perform any filtering - set to `None`')
 
     # ConvNet params
     parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type')
@@ -71,7 +68,7 @@ def parse_args():
 def run_flow():
     p = parse_args()
 
-    data_factory = DataFactory(p)
+    data_factory = dataset.vision.DataFactory(p)
 
     distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.class_names)

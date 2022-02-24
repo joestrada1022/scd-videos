@@ -4,7 +4,7 @@ from pathlib import Path
 
 import tensorflow as tf
 
-from dataset import DataFactory
+import dataset
 from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, FramePredictor,
                                  VideoPredictionStatistics, VideoPredictionVis, VideoPredictor)
 
@@ -111,14 +111,15 @@ def run_flow():
         model_files = [x for x in model_files if str(p.epoch).zfill(5) in x]
     print(f"Found {len(model_files)} files for model {model_name}")
 
-    dataset = DataFactory(p)
+    data_factory = dataset.vision.DataFactory(p)
     if p.eval_set == 'val':
-        filename_ds, eval_ds = dataset.get_tf_val_data(category=p.category)
+        filename_ds, eval_ds = data_factory.get_tf_val_data(category=p.category)
     elif p.eval_set == 'test':
-        filename_ds, eval_ds = dataset.get_tf_test_data(category=p.category)
+        filename_ds, eval_ds = data_factory.get_tf_test_data(category=p.category)
     else:
         raise ValueError('Invalid evaluation set')
     # List containing only the file names of items in evaluation set
+    onehot_ground_truths = data_factory.get_labels(eval_ds)
     eval_ds_filepaths = [x.decode("utf-8") for x in filename_ds.as_numpy_iterator()]
 
     for model_file in model_files:
@@ -133,7 +134,7 @@ def run_flow():
 
             if not frames_results.exists():
                 print(f"{model_file} | Start predicting frames")
-                frame_predictor.start(test_ds=eval_ds, filenames=eval_ds_filepaths)
+                frame_predictor.start(eval_ds, eval_ds_filepaths, onehot_ground_truths)
                 print(f"{model_file} | Predicting frames completed")
 
             if not videos_results.exists():
