@@ -68,7 +68,10 @@ def parse_args():
 def run_flow():
     p = parse_args()
 
-    data_factory = dataset.vision.DataFactory(p)
+    if p.dataset == 'vision':
+        data_factory = dataset.vision.DataFactory(p)
+    elif p.dataset == 'qufvd':
+        raise NotImplementedError
 
     distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.class_names)

@@ -64,6 +64,7 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Dataset params
+    parser.add_argument('--dataset_name', type=str, choices=['vision', 'qufvd'])
     parser.add_argument('--eval_set', type=str, required=True, default='val', choices=['val', 'test'])
     parser.add_argument('--all_I_frames_dir', type=Path, help='Input directory of extracted I frames')
     parser.add_argument('--all_frames_dir', type=Path, help='Input directory of extracted frames')
@@ -111,7 +112,13 @@ def run_flow():
         model_files = [x for x in model_files if str(p.epoch).zfill(5) in x]
     print(f"Found {len(model_files)} files for model {model_name}")
 
-    data_factory = dataset.vision.DataFactory(p)
+    if p.dataset == 'vision':
+        data_factory = dataset.vision.DataFactory(p)
+    elif p.dataset == 'qufvd':
+        raise NotImplementedError
+    else:
+        raise ValueError(f'Invalid option {p.dataset}')
+
     if p.eval_set == 'val':
         filename_ds, eval_ds = data_factory.get_tf_val_data(category=p.category)
     elif p.eval_set == 'test':
