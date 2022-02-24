@@ -19,6 +19,7 @@ def select_best_model(video_level_summary_file, replace_string=None):
         lines = sorted(f.readlines()[2:])  # skipping first 2 header rows
     eval_loss = [float(x.split(',')[3]) for x in lines]
     eval_acc = [float(x.split(',')[1]) for x in lines]
+    eval_models = [x.split(',')[0] for x in lines]
 
     # Select epoch with maximum val accuracy. If there is a tie, pick the one with least val loss
     max_elem = max(zip(eval_acc, [-x for x in eval_loss]))
@@ -34,7 +35,7 @@ def select_best_model(video_level_summary_file, replace_string=None):
     index = min(best_epoch_indices)
 
     # Copy the model corresponding to the best epoch for predictions on the test set
-    model_path = list(video_level_summary_file.parent.parent.parent.glob(f'*{str(index + 1).zfill(5)}.h5'))[0]
+    model_path = video_level_summary_file.parent.parent.parent.joinpath(f'{eval_models[index]}.h5')
     tmp = list(model_path.parts)[:-1]
     # tmp[-4] = replace_string
     tmp[-4] += '_pred'

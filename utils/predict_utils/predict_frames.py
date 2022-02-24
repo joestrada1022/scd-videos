@@ -10,18 +10,19 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from dataset import DataFactory
+
+
 # from dataset.data_factory import get_glcm_properties
 
 
 class FramePredictor:
 
-    def __init__(self, model_dir, model_file_name, result_dir, input_dir, homogeneity_csv,
-                 weights_only=False, model_class=None):
+    def __init__(self, model_dir, model_file_name, result_dir):
         self.model_dir = model_dir
         self.model_file_name = model_file_name
         self.result_dir = result_dir
-        self.input_dir = input_dir
-        self.homogeneity_csv = homogeneity_csv
+        # self.input_dir = input_dir
+        # self.homogeneity_csv = homogeneity_csv
 
         # Load model
         from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, PPCCELoss
@@ -31,11 +32,7 @@ class FramePredictor:
             'CombineInputsWithConstraints': CombineInputsWithConstraints,
             'PPCCELoss': PPCCELoss,
         }
-        if weights_only:  # fixme: deprecated functionality
-            model_class.model.load_weights(model_path)
-            self.model = model_class.model
-        else:
-            self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
+        self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
 
     def start(self, test_ds, filenames):
         output_file = self.get_output_file()
@@ -119,15 +116,11 @@ class FramePredictor:
 
         # self.__plot_constrained_filter()
         # self.__plot_constrained_activations(test_ds)
-
-        # self.model.compile()
-        # evaluate_dict = self.model.evaluate(test_ds, return_dict=True)
-        softmax_scores = self.model.predict(test_ds, verbose=1)
-
         # layer_name = 'conv2d_25'
         # intermediate_layer_model = Model(inputs=self.model.input, outputs=self.model.get_layer(layer_name).output)
         # outputs_before_softmax = intermediate_layer_model.predict(test_ds, verbose=1)
 
+        softmax_scores = self.model.predict(test_ds, verbose=1)
         actual_labels = DataFactory.get_labels(test_ds)
 
         # Use reduction type 'None' to create array of losses for each prediction
@@ -146,15 +139,4 @@ class FramePredictor:
         df = pd.DataFrame(list(zip(filenames, true_labels, predicted_labels, losses, softmax_scores)),
                           columns=["File", "True Label", "Predicted Label", "Loss", "Softmax Scores"])
         df.to_csv(output_file, index=False)
-
-        # Add the homogeneity score computations to the data_frame
-        # df = self.__compute_homogeneity_score(df)
-        df.to_csv(output_file, index=False)
-
         return output_file
-
-    def __compute_homogeneity_score(self, pred_df):
-        homo_df = pd.read_csv(self.homogeneity_csv)
-        pred_df = pd.merge(homo_df, pred_df, on='File')
-        pred_df = pred_df.loc[:, ~pred_df.columns.str.contains('^Unnamed')]
-        return pred_df

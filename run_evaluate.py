@@ -12,7 +12,7 @@ from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, 
 def get_models_files(input_dir, models_to_process):
     # Get all files (i.e. models) from input directory
     files_list = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
-    files_list = [sorted(files_list)[-1]]  # picking the last trained model
+    files_list = sorted(files_list)  # picking the last trained model
     print(f"Found {len(files_list)} files in {input_dir}: {files_list}")
 
     if models_to_process:
@@ -63,25 +63,30 @@ def parse_args():
         description='Validate the CNNs',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    # Dataset params
+    parser.add_argument('--eval_set', type=str, required=True, default='val', choices=['val', 'test'])
+    parser.add_argument('--all_I_frames_dir', type=Path, help='Input directory of extracted I frames')
+    parser.add_argument('--all_frames_dir', type=Path, help='Input directory of extracted frames')
+    parser.add_argument('--frame_selection', type=str, default='equally_spaced', choices=['equally_spaced', 'first_N'])
+    parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
+    parser.add_argument('--fpv', type=int, default=50, help='max number of frames per video (set -1 for all frames)')
+    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube"])
+
+    # ConvNet params
+    parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
+    parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
+
+    # Evaluation params
+    parser.add_argument('--epoch', type=int, default=-1, help='Choose the epoch')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
     parser.add_argument('--input_dir', type=str, required=True,
                         help='Path to directory consisting of .h5-models (to use for predicting)')
     parser.add_argument('--models', type=str,
                         help='Models within input dir (*.h5) to evaluate. Separate models by a ","')
-    parser.add_argument('--dataset', type=str, required=True, help='Dataset to use to make predictions')
-    parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
-    parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
-    parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
-    parser.add_argument('--category', type=str, help='enter "native", "whatsapp", or "youtube"')
+
+    # General params
     parser.add_argument('--suffix', type=str, help='enter suffix string for the predictions folder')
     parser.add_argument('--gpu_id', type=int, default=None, help='Choose the available GPU devices')
-    parser.add_argument('--epoch', type=int, default=-1, help='Choose the epoch')
-    parser.add_argument('--eval_set', type=str, required=True, default='val', help='Evaluation set - val or test')
-    parser.add_argument('--homogeneity_csv', type=str, default=r'/scratch/p288722/datasets/vision/old_baseline_split/'
-                                                               r'bal_all_frames/homogeneity_scores.csv')
-    parser.add_argument('--homo_or_not', type=bool, default=None,
-                        help='Filter dataset by homogeneous frames if `True`, or'
-                             'Filter dataset by non-homogeneous frames if `False`, or '
-                             'Do not perform any filtering - set to `None`')
 
     p = parser.parse_args()
 
@@ -106,7 +111,7 @@ def run_flow():
         model_files = [x for x in model_files if str(p.epoch).zfill(5) in x]
     print(f"Found {len(model_files)} files for model {model_name}")
 
-    dataset = DataFactory(p.dataset, p.batch_size, p.height, p.width, p.homo_or_not)
+    dataset = DataFactory(p)
     if p.eval_set == 'val':
         filename_ds, eval_ds = dataset.get_tf_val_data(category=p.category)
     elif p.eval_set == 'test':
@@ -117,9 +122,7 @@ def run_flow():
     eval_ds_filepaths = [x.decode("utf-8") for x in filename_ds.as_numpy_iterator()]
 
     for model_file in model_files:
-        frame_predictor = FramePredictor(model_dir=p.input_dir, model_file_name=model_file,
-                                         result_dir=frames_res_dir, input_dir=p.dataset,
-                                         homogeneity_csv=p.homogeneity_csv)
+        frame_predictor = FramePredictor(model_dir=p.input_dir, model_file_name=model_file, result_dir=frames_res_dir)
         video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir)
 
         frames_results = Path(frame_predictor.get_output_file())
