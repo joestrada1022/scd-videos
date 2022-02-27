@@ -68,10 +68,12 @@ def parse_args():
 def run_flow():
     p = parse_args()
 
-    if p.dataset == 'vision':
+    if p.dataset_name == 'vision':
         data_factory = dataset.vision.DataFactory(p)
-    elif p.dataset == 'qufvd':
-        raise NotImplementedError
+    elif p.dataset_name == 'qufvd':
+        data_factory = dataset.qufvd.DataFactory(p)
+    else:
+        raise ValueError(f'Invalid option {p.dataset_name}')
 
     distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.class_names)
@@ -82,6 +84,7 @@ def run_flow():
         net = MobileNet(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
+            net.compile()
         else:
             net.create_model(num_classes, p.height, p.width, distance_matrix, p.model_name, p.use_pretrained)
 
@@ -90,18 +93,21 @@ def run_flow():
         net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
+            net.compile()
 
     elif p.net_type == 'misl':
         net = MISLNet(num_batches, p.global_results_dir, p.const_type)
         net.create_model(num_classes, p.height, p.width, p.model_name)
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
+            net.compile()
 
     elif p.net_type == 'res':
         net = ResNet(num_batches, p.global_results_dir, p.const_type)
         net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
+            net.compile()
 
     elif p.net_type == 'mobile_supcon':
         net = MobileNetContrastive(num_batches, p.global_results_dir, p.const_type, lr=p.lr)

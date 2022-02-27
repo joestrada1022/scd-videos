@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 def make_combined_plots_horizontal(plots):
     plt.figure()
-    fig, axs = plt.subplots(2, 1, figsize=(6, 5), dpi=300, sharex=True)
+    fig, axs = plt.subplots(2, 1, figsize=(7, 5), dpi=300, sharex=True)
 
     plt.rcParams.update({'font.size': 9})
     num_epochs_after_max = 100
@@ -15,7 +15,9 @@ def make_combined_plots_horizontal(plots):
     palette = {'MobileNet': ('tab:green', '-'),
                'MobileNet - Constrained': ('tab:green', '--'),
                'ResNet': ('tab:orange', '-'),
-               'ResNet - Constrained': ('tab:orange', '--')
+               'ResNet - Constrained': ('tab:orange', '--'),
+               'MobileNet (QUFVD)': ('tab:purple', '-'),
+               'MobileNet - Constrained (QUFVD)': ('tab:purple', '--'),
                }
 
     for plot_name in plots:
@@ -69,12 +71,13 @@ def make_combined_plots_horizontal(plots):
     # axs[0].set_xlabel('epochs')
     axs[0].set_ylabel('Validation  accuracy')
     # axs[0].set_ylim([0.20, 0.70])
-    axs[0].set_xlim([0, 20])
+    # axs[0].set_xlim([0, 20])
 
     axs[1].set_xlabel('epochs')
     axs[1].set_ylabel('Validation  loss')
+    axs[1].set_yscale('log')
     # axs[1].set_ylim([0.20, 0.37])
-    axs[1].set_xlim([0, 21])
+    axs[1].set_xlim([0, 41])
 
     plt.subplots_adjust(wspace=0.05, hspace=0.08)
 
@@ -122,5 +125,12 @@ if __name__ == '__main__':
         'ResNet - Constrained': Path(r'/scratch/p288722/runtime_data/scd_videos_first_revision/11_constraints_bs64/'
                                      r'50_frames/res_net/models/ResNet_50_I_frames_ccrop_run1_Const/'
                                      r'predictions_50_frames_val/videos/V_prediction_stats.csv'),
+        'MobileNet (QUFVD)': Path(r'/scratch/p288722/runtime_data/scd_videos_first_revision/'
+                                  r'14_qufvd/all_frames/mobile_net/models/MobileNet_all_I_frames_ccrop_run1/'
+                                  r'predictions_all_frames/videos/V_prediction_stats.csv'),
+        'MobileNet - Constrained (QUFVD)': Path(r'/scratch/p288722/runtime_data/scd_videos_first_revision/'
+                                                r'14_qufvd/all_frames/mobile_net/models/'
+                                                r'MobileNet_all_I_frames_ccrop_run1_Const/predictions_all_frames/'
+                                                r'videos/V_prediction_stats.csv'),
     }
     make_combined_plots_horizontal(plot_data)

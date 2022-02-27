@@ -4,7 +4,7 @@ import sklearn.metrics
 from matplotlib import pyplot as plt
 
 
-def get_model_level_accuracy(true_labels, pred_labels):
+def get_model_level_accuracy_vision(true_labels, pred_labels):
     devices = ['D01_Samsung_GalaxyS3Mini',
                'D02_Apple_iPhone4s',
                'D03_Huawei_P9',
@@ -48,7 +48,7 @@ def get_model_level_accuracy(true_labels, pred_labels):
     return accuracy
 
 
-def get_stabilized_videos_accuracy(true_labels, pred_labels):
+def get_stabilized_videos_accuracy_vision(true_labels, pred_labels):
     devices = [('D01_Samsung_GalaxyS3Mini', False),
                ('D02_Apple_iPhone4s', True),
                ('D03_Huawei_P9', False),
@@ -102,6 +102,14 @@ def get_stabilized_videos_accuracy(true_labels, pred_labels):
     return stabilized_acc
 
 
+def get_model_level_accuracy_qufvd(true_labels, pred_labels):
+    print(' ')
+    gt = true_labels // 2
+    pd = pred_labels // 2
+    model_level_acc = sum(gt == pd) / len(gt)
+    return model_level_acc
+
+
 def create_cm_normalized(input_file, class_names, scenario=None, platform=None):
     # Credits to Guru
     from sklearn.metrics import confusion_matrix
@@ -123,11 +131,13 @@ def create_cm_normalized(input_file, class_names, scenario=None, platform=None):
     pred_labels = df['top1_class']
 
     device_level_accuracy = sum(true_labels == pred_labels) / len(true_labels)
-    model_level_accuracy = get_model_level_accuracy(true_labels, pred_labels)
-    stabilized_videos_accuracy = get_stabilized_videos_accuracy(true_labels, pred_labels)
+    # model_level_accuracy = get_model_level_accuracy_vision(true_labels, pred_labels)
+    # stabilized_videos_accuracy = get_stabilized_videos_accuracy_vision(true_labels, pred_labels)
+    model_level_accuracy_qufvd = get_model_level_accuracy_qufvd(true_labels, pred_labels)
     print(f'Device-level accuracy : {device_level_accuracy}')
-    # print(f'Model-level accuracy : {model_level_accuracy}')
-    print(f'Model-level accuracy : {stabilized_videos_accuracy}')
+    print(f'Model-level accuracy on QUFVD: {model_level_accuracy_qufvd}')
+    # print(f'Model-level accuracy on VISION : {model_level_accuracy}')
+    # print(f'Model-level accuracy on VISION : {stabilized_videos_accuracy}')
 
     cm_matrix = confusion_matrix(true_labels, pred_labels)
 
@@ -175,9 +185,9 @@ def create_cm_normalized(input_file, class_names, scenario=None, platform=None):
 
 if __name__ == '__main__':
     create_cm_normalized(
-        input_file=r'/scratch/p288722/runtime_data/scd_videos_first_revision/06_I_frames_bs64/all_frames_pred/'
-                   r'mobile_net/models/MobileNet_all_I_frames_ccrop_run3/predictions_all_frames/videos/'
-                   r'fm-e00010_V_predictions.csv',
-        class_names=list(range(1, 29)),
+        input_file=r'/scratch/p288722/runtime_data/scd_videos_first_revision/14_qufvd/all_frames_pred/mobile_net/'
+                   r'models/MobileNet_all_I_frames_ccrop_run1/predictions_all_frames/videos/'
+                   r'fm-e00020_V_predictions.csv',
+        class_names=list(range(1, 21)),
         scenario=None
     )

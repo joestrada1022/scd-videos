@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import tensorflow as tf
+from timeit import default_timer as timer
 
 import dataset
 from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, FramePredictor,
@@ -112,12 +113,12 @@ def run_flow():
         model_files = [x for x in model_files if str(p.epoch).zfill(5) in x]
     print(f"Found {len(model_files)} files for model {model_name}")
 
-    if p.dataset == 'vision':
+    if p.dataset_name == 'vision':
         data_factory = dataset.vision.DataFactory(p)
-    elif p.dataset == 'qufvd':
-        raise NotImplementedError
+    elif p.dataset_name == 'qufvd':
+        data_factory = dataset.qufvd.DataFactory(p)
     else:
-        raise ValueError(f'Invalid option {p.dataset}')
+        raise ValueError(f'Invalid option {p.dataset_name}')
 
     if p.eval_set == 'val':
         filename_ds, eval_ds = data_factory.get_tf_val_data(category=p.category)
@@ -130,8 +131,10 @@ def run_flow():
     eval_ds_filepaths = [x.decode("utf-8") for x in filename_ds.as_numpy_iterator()]
 
     for model_file in model_files:
+        # start = timer()
         frame_predictor = FramePredictor(model_dir=p.input_dir, model_file_name=model_file, result_dir=frames_res_dir)
-        video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir)
+        video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir,
+                                         dataset_name=p.dataset_name)
 
         frames_results = Path(frame_predictor.get_output_file())
         videos_results = Path(video_predictor.get_output_file())
@@ -148,6 +151,8 @@ def run_flow():
                 print(f"{model_file} | Start predicting videos")
                 video_predictor.start(frame_prediction_file=str(frames_results))
                 print(f"{model_file} | Predicting videos completed")
+        # end = timer()
+        # print(f'Elapsed time: {end - start} sec')
 
     print(f"Creating Statistics and Visualizations ...")
     # Create Frame Prediction Statistics

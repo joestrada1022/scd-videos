@@ -140,6 +140,10 @@ def create_N_frames_split_from_all_frames(source_split_dir, dest_split_dir, num_
             json.dump(output_data, f, indent=2)
 
 
+def measure_time_to_extract_I_frames():
+    cmd = """time ffmpeg -i /data/p288722/datasets/VISION/dataset/D02_Apple_iPhone4s/videos/outdoor/D02_V_outdoor_move_0001.mov -vf "select='eq(pict_type,I)'" -vsync vfr out-%04d.png"""
+
+
 if __name__ == '__main__':
     # run_flow()
     create_N_frames_split_from_all_frames(
