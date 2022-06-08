@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import sklearn.metrics
 from matplotlib import pyplot as plt
 
 

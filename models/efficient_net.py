@@ -15,11 +15,13 @@ class EfficientNet(BaseNet):
         self.model_name = model_name  # fixme: This should ideally be in the __init__
         input_shape = (height, width, 3)
 
-        self.model = tf.keras.applications.EfficientNetB0(include_top=True, weights=None,
-                                                          input_shape=input_shape, classes=num_outputs)
+        self.model = tf.keras.applications.efficientnet_v2.EfficientNetV2B0(
+            include_top=True, weights=None, input_shape=input_shape, classes=num_outputs, include_preprocessing=False
+        )
         if use_pretrained:
-            pretrained = tf.keras.applications.EfficientNetB0(include_top=False, weights='imagenet',
-                                                              input_shape=input_shape)
+            pretrained = tf.keras.applications.efficientnet_v2.EfficientNetV2B0(
+                include_top=False, weights='imagenet', input_shape=input_shape, include_preprocessing=False
+            )
             for idx in range(len(pretrained.layers)):
                 self.model.layers[idx].set_weights(pretrained.layers[idx].get_weights())
 

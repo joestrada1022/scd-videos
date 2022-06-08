@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--frame_selection', type=str, default='equally_spaced', choices=['equally_spaced', 'first_N'])
     parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
     parser.add_argument('--fpv', type=int, default=50, help='max number of frames per video (set -1 for all frames)')
-    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube"])
+    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube", "None"])
 
     # ConvNet params
     parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type')
@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
     parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
     parser.add_argument('--net_type', type=str, default='mobile',
-                        choices=['mobile', 'eff', 'misl', 'res', 'mobile_supcon', 'resnet_supcon', 'eff_supcon'])
+                        choices=['mobile', 'effv2', 'misl', 'res', 'mobile_supcon', 'resnet_supcon', 'eff_supcon'])
 
     # Optimization params
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
@@ -56,6 +56,7 @@ def parse_args():
     parser.add_argument('--global_results_dir', type=Path, required=True, help='Path to results dir')
 
     p = parser.parse_args()
+
     print(f'Using pre-trained model - {p.use_pretrained}')
 
     if p.gpu_id is not None:
@@ -78,7 +79,8 @@ def run_flow():
     distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.class_names)
     train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)
-    filename_ds, val_ds = data_factory.get_tf_val_data(category=p.category)
+    # filename_ds, val_ds = data_factory.get_tf_val_data(category=p.category)
+    val_ds = None  # validation is being performed in a separate process
 
     if p.net_type == 'mobile':
         net = MobileNet(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
@@ -88,7 +90,7 @@ def run_flow():
         else:
             net.create_model(num_classes, p.height, p.width, distance_matrix, p.model_name, p.use_pretrained)
 
-    elif p.net_type == 'eff':
+    elif p.net_type == 'effv2':
         net = EfficientNet(num_batches, p.global_results_dir, p.const_type)
         net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
         if p.model_path:  # to continue the training

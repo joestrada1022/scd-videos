@@ -23,17 +23,14 @@ class DataFactory:
 
         self.train_data = get_frames_dataset('Training', args)
         self.train_data = list(itertools.chain.from_iterable(self.train_data.values()))
-        # self.train_data = self._filter_images_based_on_homogeneity(self.train_data, homogeneous_frames)
         random.seed(108)
         random.shuffle(self.train_data)
 
         self.val_data = get_frames_dataset('Validation', args)
         self.val_data = sorted(itertools.chain.from_iterable(self.val_data.values()))
-        # self.val_data = self._filter_images_based_on_homogeneity(self.val_data, homogeneous_frames)
 
         self.test_data = get_frames_dataset('Testing', args)
         self.test_data = sorted(itertools.chain.from_iterable(self.test_data.values()), reverse=True)
-        # self.test_data = self._filter_images_based_on_homogeneity(self.test_data, homogeneous_frames)
         self.all_I_frames_dir = args.all_I_frames_dir
         self.class_names = self.get_class_names()
 

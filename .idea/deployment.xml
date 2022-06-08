@@ -9,10 +9,38 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="p288722@195.169.22.147:22 password">
+      <paths name="Peregrine - data">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/p288722/git_code/scd_videos_first_revision" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Peregrine - scratch">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="deep_hashing (A40)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ihs_delivery">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ihs_delivery (A40 server)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
@@ -31,6 +59,13 @@
         </serverdata>
       </paths>
       <paths name="pg-scratch">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="scd_images (Peregrine)">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />

@@ -1,84 +1,94 @@
-# Video Camera Model Identification (Digital Forensics)
+# Source Camera Device Identification from Videos
 
-This repository consists of code to perform the task of video camera model identification. Experiments are conducted by
-using data of the [VISION](https://lesc.dinfo.unifi.it/it/node/203) dataset.
+This repository consists of code to reproduce the results reported in our paper. Experiments were conducted on 
+the [VISION](https://lesc.dinfo.unifi.it/it/node/203) and the [QUFVD](https://ieeexplore.ieee.org/document/9713852/) 
+data sets. Access to the published [open access paper](https://link.springer.com/article/10.1007/s42979-022-01202-0).
 
-## Creation of datasets
+## Dataset Preparation
+### 1. Preparation of VISION data set
 
-To create the datasets, we assume the VISION dataset (only videos) is available in the original structure:
+#### Dataset download
+To prepare the data sets, we assume the VISION data set (only videos) is downloaded and available in the original 
+structure:
 
 ```
 VISION  
-  |  
-  |--- D01  
-  |     |  
-  |      --- videos  
-  |             |  
-  |              --- flat  
-  |                   |  
-  |                    --- flat_video1.mp4  
-  |                    --- flat_video2.mp4  
-  |              --- flatWA  
-  |                   |  
-  |                    --- flatWA_video1.mp4  
-  |                    --- flatWA_video2.mp4  
-  |              --- ...  
-  |              --- outdoorYT  
-   --- D02  
-   --- ...  
-   --- D35  
+  │  
+  │─── D01  
+  │     │  
+  │     └─── videos  
+  │             │  
+  │             │─── flat  
+  │             │     │  
+  │             │     └─── flat_video1.mp4  
+  │             │     └─── flat_video2.mp4  
+  │             │─── flatWA  
+  │             │     │  
+  │             │     └─── flatWA_video1.mp4  
+  │             │     └─── flatWA_video2.mp4  
+  │             │─── ...  
+  │             └─── outdoorYT  
+  │─── D02  
+  │─── ...  
+  └─── D35  
    
 ```
 
-### Frame dataset
+#### Frame extraction
 
-In the following steps we refer to the VISION dataset as the VISION video dataset.
+_Prerequisites_: FFmpeg library (https://ffmpeg.org/)
 
-1. Execute `dataset/frames/frame_extractor/frame_extractor.py` and set
-   params `--input_dir="/path/to/VISION video dataset"` and `--output_dir=/path/to/VISION frame dataset`. This script
-   creates a new directory (i.e. `/path/to/VISION frame dataset`) consisting of frames. This script iterates over each
-   device in the VISION video dataset, and extracts `N` frames from each video. A separate directory is created for
-   every video. To change the number of frames extracted from a video, change param `--frames_to_save_per_video`.
+Extract the frames from videos in the VISION data set
 
-2. Execute `dataset/frames/create_main_dataset.py`. Set properties `VISION_DATASET_DIR` (line 54)
-   to `/path/to/VISION video dataset` and `VISION_FRAMES_DIR` (line 55) to `/path/to/VISION frame dataset`. This script
-   creates a new dataset for 28 devices (hard-defined in script itself) with only valid videos. A video is considered to
-   be valid when both WhatsApp and YouTube versions are available for the native/original video.
+- Execute `dataset/vision/frame_extraction.py` and set params `--input_dir="<path to the vision data set>"` and
+` --output_dir="<path to an directory to save the extracted frames>"`. Refer to the [script](https://github.com/bgswaroop/scd-videos/tree/main/dataset/vision/frame_extraction.py) 
+  for additional command line arguments and details. 
 
-The structure of the main dataset is as follows:
+The structure of the resulting VISION frames data set is as follows:
 
 ```
-DATASET
-  |
-   --- D01
-  |     |
-  |      --- flat_video1
-  |             |
-  |              --- flat_video1_frame1.jpeg
-  |              --- flat_video1_frame2.jpeg
-  |      --- flatWA_video1
-  |      --- flatYT_video1
-   --- D02
+VISION FRAMES DATASET
+  │
+  │─── D01
+  │     │
+  │     │─── flat_video1
+  │     │       │
+  │     │       └─── flat_video1_frame1.png
+  │     │       └─── flat_video1_frame2.png
+  │     └─── flatWA_video1
+  │     └─── flatYT_video1
+  └─── D02
 ```
 
-Warning: this script is not optimised as it currently copies frames instead of using symlinks.
+### 2. Preparation of the QUFVD data set
+#### Dataset download
 
-3. Execute `dataset/frames/create_train_test_set.py` to create the train and test based on the dataset created in step
-   2. This script randomly selects 7 train and 6 test videos per device, including the social versions. Currently, every
-   frame per video is copied (in this case 200).
+QUFVD data set has three components, only the I-frames data set (`IFrameForEvalution20Class`) is considered for our experiments, which has 
+the following structure: 
 
-### Patch dataset
+```
+IFrameForEvalution20Class  
+  │  
+  │─── FrameDatabaseTesting  
+  │     │  
+  │     └─── CameraModelName  
+  │             │  
+  │             │─── Device1  
+  │             │     │  
+  │             │     └─── video1_frame1.jpg  
+  │             │     └─── video1_frame2.jpg
+  │             │          ...
+  │             │     └─── video2_frame1.jpg
+  │             │     └─── video2_frame2.jpg 
+  │             └─── Device2   
+  │─── FrameDatabaseTesting   
+  └─── FrameDatabaseTraining  
+```
 
-The patch train and test set are created by copying the structure of the train and test set of the frame dataset. The
-following scripts can be executed to create and balance the patch train and test set:
+#### Frame extraction
+The I-frames are already extracted and divided into three sets as shown above. We make use of this default split.
 
-1. `dataset/patches/patch_extractor_train.py` to create a new (unbalanced) train set of patches of size 128x128.
-2. `dataset/patches/patch_extractor_test.py` to create a new (unbalanced) test set of patches of size 128x128.
-3. `dataset/patches/patch_balancer_train.py` to balance the train set by ensuring that each video is represented by same
-   number of frames (number of patches may differ though).
-4. `dataset/patches/patch_balancer_test.py` same as step 3 but for the test set.
-
-## Experiment 1. Frames - Training
+## Training
 
 Script `constrained_net/train/train.py` can be executed to train the ConstraindNet. Bash files to train the ConvNet and
 ConstrainedNet on e.g. HPC Peregrine can be found in `constrained_net/bash/frames/*`.
@@ -86,7 +96,7 @@ ConstrainedNet on e.g. HPC Peregrine can be found in `constrained_net/bash/frame
 Use param `--model_name` to set the name of your model. To continue training from a saved model, specify the path to the
 particular model by using `--model_path`.
 
-## Experiment 1. Frames - Predicting
+## Predicting
 
 Script `constrained_net/predict/predict_flow.py` can be executed to automatically generate predictions on frame and
 video level. Param `--input_dir` should point to a directory consisting of models (.h5 file). In my case, I saved a
@@ -120,22 +130,16 @@ there are models available in the input directory. Lastly, these files are used 
 
 Bash files to evaluate the ConstrainedNet on e.g. HPC Peregrine can be found in `constrained_net/bash/frames`.
 
-## Experiment 2. Patches - Training
-
-Script `constrained_net/train/train.py` can be executed to train the ConstraindNet. Make sure to set the
-params `--height` and `--width` to the patch size in order to change the input size of the network. Bash files to train
-the ConvNet and ConstrainedNet on e.g. HPC Peregrine can be found in `constrained_net/bash/patches/*`.
-
-Use param `--model_name` to set the name of your model. To continue training from a saved model, specify the path to the
-particular model by using `--model_path`.
-
-## Experiment 2. Patches - Predicting
-
-To create patch and video predictions, the same steps are used as for experiment 1. Bash files to evaluate the
-ConstrainedNet on e.g. HPC Peregrine can be found in `constrained_net/bash/patches`.
-
-## ConstrainedNet vs. ConvNet
-
-In `constrained_net/constrained_net.py` the parameter `self.constrained_net` can be set to False in the constructor, to
-remove the constrained convolutional layer. 
-
+### Citation   
+```
+@article{bennabhaktula2022source,
+  title={Source Camera Device Identification from Videos},
+  author={Bennabhaktula, Guru Swaroop and Timmerman, Derrick and Alegre, Enrique and Azzopardi, George},
+  journal={SN Computer Science},
+  volume={3},
+  number={4},
+  pages={1--15},
+  year={2022},
+  publisher={Springer}
+}
+```   

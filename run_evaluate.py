@@ -72,11 +72,13 @@ def parse_args():
     parser.add_argument('--frame_selection', type=str, default='equally_spaced', choices=['equally_spaced', 'first_N'])
     parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
     parser.add_argument('--fpv', type=int, default=50, help='max number of frames per video (set -1 for all frames)')
-    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube"])
+    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube", "None"])
 
     # ConvNet params
     parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
     parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
+    parser.add_argument('--net_type', type=str, default='mobile',
+                        choices=['mobile', 'effv2', 'misl', 'res', 'mobile_supcon', 'resnet_supcon', 'eff_supcon'])
 
     # Evaluation params
     parser.add_argument('--epoch', type=int, default=-1, help='Choose the epoch')

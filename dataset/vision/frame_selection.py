@@ -8,7 +8,7 @@ import numpy as np
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate dataset split files')
     parser.add_argument('--all_I_frames_dir', type=Path, help='Input directory of extracted I frames')
-    parser.add_argument('--all_frames_dir', type=Path, help='Input directory of extracted frames')
+    parser.add_argument('--all_frames_dir', type=Path, help='Input directory of all extracted frames')
     parser.add_argument('--dest_frame_splits_dir', type=Path, required=True,
                         help='Output directory to save the train, val, and test splits')
     parser.add_argument('--frame_selection', type=str, required=True, choices=['equally_spaced', 'first_N'])
@@ -49,7 +49,14 @@ def frame_selection(args, device, video):
 
 
 def get_frames_dataset(split, args):
-    video_level_split = Path(__file__).resolve().parent.joinpath(f'split/{split}_videos.json')
+    """
+
+    :param split: indicates the type of split ['train', 'val', 'test']
+    :type split: str
+    :param args:
+    :return:
+    """
+    video_level_split = Path(f'split/{split}_videos.json')
     with open(video_level_split) as f:
         videos_per_device = json.load(f)
 
@@ -71,18 +78,6 @@ def generate_dataset_split_files(args):
             json.dump(frames_per_device, f, indent=2)
 
 
-def are_two_frame_splits_same(split1, split2):
-    with open(split1) as f1, open(split2) as f2:
-        split1 = json.load(f1)
-        split2 = json.load(f2)
-
-    for device1, device2 in zip(sorted(split1), sorted(split2)):
-        elements = set(split1[device1]).symmetric_difference(split2[device2])
-        if len(elements) != 0:
-            return False
-    return True
-
-
 def run_flow():
     args = parse_args()
     generate_dataset_split_files(args)
@@ -90,7 +85,3 @@ def run_flow():
 
 if __name__ == '__main__':
     run_flow()
-    print(are_two_frame_splits_same(
-        split1=r'/scratch/p288722/datasets/vision/splits/I_frames/train_frames.json',
-        split2=r'/scratch/p288722/datasets/vision/I_frame_splits/bal_50_frames/train.json'
-    ))

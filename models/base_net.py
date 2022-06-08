@@ -24,7 +24,7 @@ class BaseNet(abc.ABC):
         self.model_name = None
 
         # Constrained layer properties
-        assert const_type in {None, 'guru', 'derrick'}
+        assert const_type in {None, 'guru', 'derrick', 'bayar'}
         self.const_type = const_type
         self.constrained_n_filters = 3
         self.constrained_kernel_size = 5

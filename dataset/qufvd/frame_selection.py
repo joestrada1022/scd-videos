@@ -72,18 +72,6 @@ def generate_dataset_split_files(args):
             json.dump(frames_per_device, f, indent=2)
 
 
-def are_two_frame_splits_same(split1, split2):
-    with open(split1) as f1, open(split2) as f2:
-        split1 = json.load(f1)
-        split2 = json.load(f2)
-
-    for device1, device2 in zip(sorted(split1), sorted(split2)):
-        elements = set(split1[device1]).symmetric_difference(split2[device2])
-        if len(elements) != 0:
-            return False
-    return True
-
-
 def run_flow():
     args = parse_args()
     generate_dataset_split_files(args)
@@ -91,7 +79,4 @@ def run_flow():
 
 if __name__ == '__main__':
     run_flow()
-    print(are_two_frame_splits_same(
-        split1=r'/scratch/p288722/datasets/vision/splits/I_frames/train_frames.json',
-        split2=r'/scratch/p288722/datasets/vision/I_frame_splits/bal_50_frames/train.json'
-    ))
+
