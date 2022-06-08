@@ -58,7 +58,7 @@ class CombineInputsWithConstraints(tf.keras.layers.Layer):
 
 
 class Constrained3DKernelMinimal(Constraint):
-    def __init__(self, const_type='guru'):
+    def __init__(self, const_type='derrick'):
         super(Constrained3DKernelMinimal, self).__init__()
         self.const_type = const_type
 
@@ -91,14 +91,8 @@ class Constrained3DKernelMinimal(Constraint):
 
         This means there are 3 filters in total with each filter being 3-dimensional.
        """
-        if self.const_type == 'guru':
-            return self.__constraint_positive_surrounding_weights(w)
-        elif self.const_type == 'derrick':
-            return self.__constraint_derrick_et_al_with_transpose(w)
-        elif self.const_type == 'bug':
-            return self.__constraint_derrick_et_al_with_reshape(w)
-        elif self.const_type == 'bayar':
-            return self.__constraint_bayar_et_al(w)
+        if self.const_type == 'derrick':
+            return self._constraint_derrick_et_al(w)
         else:
             raise ValueError('Invalid constraint type')
 
@@ -106,104 +100,8 @@ class Constrained3DKernelMinimal(Constraint):
         return {}
 
     @staticmethod
-    def __constraint_bayar_et_al(w):
+    def _constraint_derrick_et_al(w):
         w_original_shape = w.shape
-        # w = w * 10000  # scale by 10k to prevent numerical issues
-
-        # 1. Reshaping of 'w'
-        x, y, z, n_kernels = w_original_shape[0], w_original_shape[1], w_original_shape[2], w_original_shape[3]
-        center = x // 2  # Determine the center cell on the xy-plane.
-        new_shape = [n_kernels, z, x, y]
-        w = tf.transpose(w, [3, 2, 0, 1])
-
-        # 2. Set center values of 'w' to zero by multiplying 'w' with mask-matrix
-        center_zero_mask = np.ones(new_shape)
-        center_zero_mask[:, :, center, center] = 0
-        w *= center_zero_mask
-
-        # 3. Normalize values w.r.t xy-planes
-        xy_plane_sum = tf.reduce_sum(w, [2, 3], keepdims=True)  # Recall new shape of w: (n_kernels, z, y, x).
-        w = tf.math.divide(w, xy_plane_sum) * 10000  # Divide each element by its corresponding xy-plane sum-value
-
-        # 4. Set center values of 'w' to negative one by subtracting mask-matrix from 'w'
-        center_one_mask = np.zeros(new_shape)
-        center_one_mask[:, :, center, center] = 10000
-        w = tf.math.subtract(w, center_one_mask)
-
-        # Reshape 'w' to original shape and return
-        w = tf.transpose(w, [2, 3, 1, 0])
-        return w
-
-    @staticmethod
-    def __constraint_positive_surrounding_weights(w):
-        center = w.shape[0] // 2
-
-        # Determine the min and max values for the non-center pixels
-        center_zero_mask = np.ones(w.shape)
-        center_zero_mask[center, center, :, :] = 0
-        w = w * center_zero_mask
-        center_max_mask = np.zeros(w.shape)
-        center_max_mask[center, center, :, :] = np.inf
-        w_max_center = tf.math.add(w, center_max_mask)
-        w_min = tf.reduce_min(w_max_center, axis=[0, 1], keepdims=True)
-
-        center_min_mask = np.zeros(w.shape)
-        center_min_mask[center, center, :, :] = -np.inf
-        w_min_center = tf.math.add(w, center_min_mask)
-        w_max = tf.reduce_max(w_min_center, axis=[0, 1], keepdims=True)
-
-        # Reducing the min by a small value to avoid zeros in the weight matrix
-        w_min -= tf.random.uniform([1], minval=0.001, maxval=0.1)
-
-        # 1. Perform min max normalization
-        w = tf.math.divide(tf.math.subtract(w, w_min), w_max - w_min)
-
-        # 2. Perform l1 normalization
-        center_zero_mask = np.ones(w.shape)
-        center_zero_mask[center, center, :, :] = 0
-        w *= center_zero_mask
-        w = tf.math.divide(w, tf.reduce_sum(w, axis=[0, 1], keepdims=True)) * 10000
-
-        # 3. Set the center value to -1
-        center_one_mask = np.zeros(w.shape)
-        center_one_mask[center, center, :, :] = 10000
-        w = tf.math.subtract(w, center_one_mask)
-
-        return w
-
-    @staticmethod
-    def __constraint_derrick_et_al_with_reshape(w):
-        w_original_shape = w.shape
-        w = w * 10000  # scale by 10k to prevent numerical issues
-
-        # 1. Reshaping of 'w'
-        x, y, z, n_kernels = w_original_shape[0], w_original_shape[1], w_original_shape[2], w_original_shape[3]
-        center = x // 2  # Determine the center cell on the xy-plane.
-        new_shape = [n_kernels, z, x, y]
-        w = tf.reshape(w, new_shape)
-
-        # 2. Set center values of 'w' to zero by multiplying 'w' with mask-matrix
-        center_zero_mask = np.ones(new_shape)
-        center_zero_mask[:, :, center, center] = 0
-        w *= center_zero_mask
-
-        # 3. Normalize values w.r.t xy-planes
-        xy_plane_sum = tf.reduce_sum(w, [2, 3], keepdims=True)  # Recall new shape of w: (n_kernels, z, y, x).
-        w = tf.math.divide(w, xy_plane_sum)  # Divide each element by its corresponding xy-plane sum-value
-
-        # 4. Set center values of 'w' to negative one by subtracting mask-matrix from 'w'
-        center_one_mask = np.zeros(new_shape)
-        center_one_mask[:, :, center, center] = 1
-        w = tf.math.subtract(w, center_one_mask)
-
-        # Reshape 'w' to original shape and return
-        w = tf.reshape(w, w_original_shape)
-        return w
-
-    @staticmethod
-    def __constraint_derrick_et_al_with_transpose(w):
-        w_original_shape = w.shape
-        # w = w * 10000  # scale by 10k to prevent numerical issues
 
         # 1. Reshaping of 'w'
         x, y, z, n_kernels = w_original_shape[0], w_original_shape[1], w_original_shape[2], w_original_shape[3]

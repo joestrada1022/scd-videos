@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 import tensorflow as tf
-from timeit import default_timer as timer
 
 import dataset
 from utils.predict_utils import (FramePredictionStatistics, FramePredictionVis, FramePredictor,
@@ -77,8 +76,7 @@ def parse_args():
     # ConvNet params
     parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
     parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
-    parser.add_argument('--net_type', type=str, default='mobile',
-                        choices=['mobile', 'effv2', 'misl', 'res', 'mobile_supcon', 'resnet_supcon', 'eff_supcon'])
+    parser.add_argument('--net_type', type=str, default='mobile', choices=['mobile', 'misl', 'res'])
 
     # Evaluation params
     parser.add_argument('--epoch', type=int, default=-1, help='Choose the epoch')
@@ -119,21 +117,17 @@ def run_flow():
         data_factory = dataset.vision.DataFactory(p)
     elif p.dataset_name == 'qufvd':
         data_factory = dataset.qufvd.DataFactory(p)
-    else:
-        raise ValueError(f'Invalid option {p.dataset_name}')
 
     if p.eval_set == 'val':
         filename_ds, eval_ds = data_factory.get_tf_val_data(category=p.category)
     elif p.eval_set == 'test':
         filename_ds, eval_ds = data_factory.get_tf_test_data(category=p.category)
-    else:
-        raise ValueError('Invalid evaluation set')
+
     # List containing only the file names of items in evaluation set
     onehot_ground_truths = data_factory.get_labels(eval_ds)
     eval_ds_filepaths = [x.decode("utf-8") for x in filename_ds.as_numpy_iterator()]
 
     for model_file in model_files:
-        # start = timer()
         frame_predictor = FramePredictor(model_dir=p.input_dir, model_file_name=model_file, result_dir=frames_res_dir)
         video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir,
                                          dataset_name=p.dataset_name)
@@ -153,8 +147,6 @@ def run_flow():
                 print(f"{model_file} | Start predicting videos")
                 video_predictor.start(frame_prediction_file=str(frames_results))
                 print(f"{model_file} | Predicting videos completed")
-        # end = timer()
-        # print(f'Elapsed time: {end - start} sec')
 
     print(f"Creating Statistics and Visualizations ...")
     # Create Frame Prediction Statistics

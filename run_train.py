@@ -34,14 +34,13 @@ def parse_args():
     parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube", "None"])
 
     # ConvNet params
-    parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type')
+    parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type', choices=['derrick'])
     parser.add_argument('--model_name', type=str, help='Name for the model')
     parser.add_argument('--use_pretrained', type=none_or_bool, default=True, help='Use pretrained net from ImageNet')
     parser.add_argument('--model_path', type=str, help='Path to model to continue training (*.h5)')
     parser.add_argument('--height', type=int, default=480, help='Height of CNN input dimension [default: 480]')
     parser.add_argument('--width', type=int, default=800, help='Width of CNN input dimension [default: 800]')
-    parser.add_argument('--net_type', type=str, default='mobile',
-                        choices=['mobile', 'effv2', 'misl', 'res', 'mobile_supcon', 'resnet_supcon', 'eff_supcon'])
+    parser.add_argument('--net_type', type=str, default='mobile', choices=['mobile', 'misl', 'res'])
 
     # Optimization params
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
