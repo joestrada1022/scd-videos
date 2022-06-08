@@ -23,7 +23,7 @@ opencv-python==4.5.5.62
 opt-einsum==3.3.0
 packaging==21.3
 pandas==1.4.0
-Pillow==9.0.0
+Pillow==9.0.1
 protobuf==3.19.4
 pyparsing==3.0.7
 python-dateutil==2.8.2
@@ -37,7 +37,7 @@ seaborn==0.11.2
 six==1.16.0
 soupsieve==2.3.1
 tensorboard==2.8.0
-tensorflow==2.7.0
+tensorflow==2.7.2
 tensorflow-addons==0.15.0
 termcolor==1.1.0
 threadpoolctl==3.0.0
