@@ -3,12 +3,9 @@ import os
 
 import numpy as np
 import tensorflow as tf
-
-tf.config.run_functions_eagerly(True)
 from tensorflow.keras.callbacks import TensorBoard
 
 from utils.callbacks import WarmUpCosineDecayScheduler
-from utils.callbacks import PredictionsCallback
 
 
 class BaseNet(abc.ABC):
@@ -24,7 +21,7 @@ class BaseNet(abc.ABC):
         self.model_name = None
 
         # Constrained layer properties
-        assert const_type in {None, 'guru', 'derrick', 'bayar'}
+        assert const_type in {None, 'guru', 'derrick', 'bayar'}  # fixme
         self.const_type = const_type
         self.constrained_n_filters = 3
         self.constrained_kernel_size = 5
@@ -47,13 +44,10 @@ class BaseNet(abc.ABC):
         self.model_name = model_name
 
         if self.model is None:
-            from models import Constrained3DKernelMinimal, CombineInputsWithConstraints, \
-                SupervisedContrastiveLoss, PPCCELoss
+            from models import Constrained3DKernelMinimal, CombineInputsWithConstraints
             custom_objects = {
                 'Constrained3DKernelMinimal': Constrained3DKernelMinimal,
                 'CombineInputsWithConstraints': CombineInputsWithConstraints,
-                'SupervisedContrastiveLoss': SupervisedContrastiveLoss,
-                'PPCCELoss': PPCCELoss,
             }
             self.model = tf.keras.models.load_model(model_path, custom_objects=custom_objects, compile=False)
         else:
@@ -63,13 +57,9 @@ class BaseNet(abc.ABC):
         raise NotImplementedError('method create_model is not implemented')
 
     def compile(self):
-        # custom_loss = self.make_custom_loss(self.model)
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
                            optimizer=tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
-                           metrics=["accuracy"],
-                           run_eagerly=True
-                           )
-        self.model.run_eagerly = True
+                           metrics=["accuracy"])
 
     def get_tensorboard_path(self):
         if self.model_name is None:
@@ -92,7 +82,7 @@ class BaseNet(abc.ABC):
         # Append file name and return
         return path.joinpath(file_name)
 
-    def __get_initial_epoch(self):
+    def _get_initial_epoch(self):
         # Means we train from scratch
         if self.model_path is None:
             return 0
@@ -116,38 +106,29 @@ class BaseNet(abc.ABC):
         if self.model is None:
             raise ValueError("Cannot start training! self.model is None!")
 
-        initial_epoch = self.__get_initial_epoch()
+        initial_epoch = self._get_initial_epoch()
         epochs += initial_epoch
 
-        callbacks = self.get_callbacks(train_ds, val_ds, epochs, initial_epoch)
+        callbacks = self.get_callbacks(train_ds, epochs, initial_epoch)
 
         self.model.fit(train_ds,
                        epochs=epochs,
                        initial_epoch=initial_epoch,
                        validation_data=val_ds,
                        callbacks=callbacks,
-                       workers=12,
+                       workers=12,  # fixme --> something like autotune
                        use_multiprocessing=True)
 
-    def get_callbacks(self, train_ds, val_ds, epochs, completed_epochs):
+    def get_callbacks(self, train_ds, epochs, completed_epochs):
         default_file_name = "fm-e{epoch:05d}.h5"
         save_model_path = self.get_save_model_path(default_file_name)
 
         save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
                                                            verbose=0,
                                                            save_weights_only=False,
-                                                           save_freq='epoch')  # period=1 (for older ver of TensorFlow)
+                                                           save_freq='epoch')
 
         tensorboard_cb = TensorBoard(log_dir=str(self.get_tensorboard_path()), update_freq='batch')
-
-        # lr_callback = tf.keras.callbacks.LearningRateScheduler(
-        #     schedule=tf.keras.optimizers.schedules.ExponentialDecay(
-        #         initial_learning_rate=0.001, decay_steps=1, decay_rate=0.96
-        #     ),
-        #     # schedule=CosineDecay(
-        #     #     initial_learning_rate=0.001, decay_steps=40, alpha=0.0, name=None
-        #     # ),
-        #     verbose=1)
 
         steps_per_epoch = tf.data.experimental.cardinality(train_ds).numpy()
         warm_up_epochs = 0.25 if epochs < 3 else 3
@@ -158,9 +139,6 @@ class BaseNet(abc.ABC):
                                                  warmup_steps=int(warm_up_epochs * steps_per_epoch),
                                                  hold_base_rate_steps=0,
                                                  verbose=1)
-
-        # print_predictions_cb = PredictionsCallback(train_ds=train_ds, val_ds=val_ds)
-        # lr_callback = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
 
         return [save_model_cb, tensorboard_cb, lr_callback]
 

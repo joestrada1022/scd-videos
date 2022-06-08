@@ -14,7 +14,6 @@ from .frame_selection import get_frames_dataset
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-tf.config.run_functions_eagerly(True)
 
 
 class DataFactory:
@@ -32,7 +31,7 @@ class DataFactory:
         self.test_data = get_frames_dataset('test', args)
         self.test_data = sorted(itertools.chain.from_iterable(self.test_data.values()), reverse=True)
 
-        self.class_names = self.get_class_names()
+        self.class_names = self._get_class_names()
         self.net_type = args.net_type
         self.batch_size = args.batch_size
         self.img_width = args.width
@@ -40,33 +39,25 @@ class DataFactory:
         self.seed = 108  # To allow reproducibility
 
     @staticmethod
-    def get_class_names():
+    def _get_class_names():
         video_level_split = Path(__file__).resolve().parent.joinpath(f'split/train_videos.json')
         with open(video_level_split) as f:
             videos_per_device = json.load(f)
         return np.array(sorted(videos_per_device))
 
-    def get_tf_input_dim(self):
-        return tf.constant((self.img_height, self.img_width), tf.dtypes.int32)
-
-    def process_path(self, file_path):
-        label = self.get_label(file_path)
-        img = self.load_img(file_path)
+    def _process_path(self, file_path):
+        label = self._get_label(file_path)
+        img = self._load_img(file_path)
         return img, label
 
-    def get_label(self, file_path):
+    def _get_label(self, file_path):
         file_parts = tf.strings.split(file_path, os.path.sep)
         class_name = file_parts[-3]
         one_hot_vec = tf.cast(class_name == self.class_names, dtype=tf.dtypes.float32, name="labels")
         return one_hot_vec
 
     @staticmethod
-    def get_file_name(file_path):
-        file_parts = tf.strings.split(file_path, os.path.sep)
-        file_name = file_parts[-1]
-        return file_name
-
-    def load_img(self, file_path):
+    def _load_img(file_path):
         img = tf.io.read_file(file_path)
         try:
             img = tf.image.decode_png(img, channels=3)
@@ -76,6 +67,38 @@ class DataFactory:
         img = tf.image.convert_image_dtype(img, tf.dtypes.float32)
 
         return img
+
+    def _center_crop(self, img):
+        img = tf.convert_to_tensor(img.numpy())
+        img_height, img_width, _ = img.get_shape().as_list()
+
+        # Correcting image orientation
+        if img_height > img_width:
+            img = tf.image.rot90(img)
+            img_height, img_width = img_width, img_height
+
+        # Perform center crop
+        crop_height, crop_width = self.img_height, self.img_width
+        img = tf.image.crop_to_bounding_box(image=img,
+                                            offset_height=int(img_height / 2 - crop_height / 2),
+                                            offset_width=int(img_width / 2 - crop_width / 2),
+                                            target_height=crop_height,
+                                            target_width=crop_width)
+        return img
+
+    def _center_crop_wrapper(self, img, label):
+        # explicitly renaming the variables to avoid confusion
+        img = tf.py_function(self._center_crop, img, tf.float32)
+        return img, label
+
+    def _pre_process(self, labeled_ds):
+        """
+        Center crop the dataset
+        :param labeled_ds:
+        :return:
+        """
+        ds = labeled_ds.map(self._center_crop_wrapper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        return ds
 
     def get_tf_train_data(self, category):
         t_start = time.time()
@@ -94,8 +117,8 @@ class DataFactory:
         print(f"Found {len(list(file_path_ds))} images in ({int(time.time() - t_start)} sec.)")
 
         # Load actual images and create labels accordingly
-        labeled_ds = file_path_ds.map(self.process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        labeled_ds = self.pre_process(labeled_ds)
+        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        labeled_ds = self._pre_process(labeled_ds)
 
         print(f"\nFinished creating labeled dataset ({int(time.time() - t_start)} sec.)\n")
 
@@ -136,8 +159,8 @@ class DataFactory:
         print(f"Found {len(list(file_path_ds))} images in ({int(time.time() - t_start)} sec.)")
 
         # Create labeled dataset by loading the image and estimating the label
-        labeled_ds = file_path_ds.map(self.process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        labeled_ds = self.pre_process(labeled_ds)
+        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        labeled_ds = self._pre_process(labeled_ds)
 
         labeled_ds = labeled_ds.batch(self.batch_size, drop_remainder=False)
         labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
@@ -156,38 +179,3 @@ class DataFactory:
         labels_ds = ds.flat_map(lambda x, y: tf.data.Dataset.from_tensor_slices(y))
         ground_truth_labels = np.array(list(labels_ds.as_numpy_iterator())).astype(np.int32)
         return ground_truth_labels
-
-    def center_crop(self, img):
-        img = tf.convert_to_tensor(img.numpy())
-        img_height, img_width, _ = img.get_shape().as_list()
-        crop_height, crop_width = self.img_height, self.img_width
-
-        try:
-            img = tf.image.crop_to_bounding_box(image=img,
-                                                offset_height=int(img_height / 2 - crop_height / 2),
-                                                offset_width=int(img_width / 2 - crop_width / 2),
-                                                target_height=480,
-                                                target_width=800)
-        except ValueError:
-            img = tf.image.rot90(img)
-            img_height, img_width, _ = img.get_shape().as_list()
-            img = tf.image.crop_to_bounding_box(image=img,
-                                                offset_height=int(img_height / 2 - crop_height / 2),
-                                                offset_width=int(img_width / 2 - crop_width / 2),
-                                                target_height=480,
-                                                target_width=800)
-        return img
-
-    def center_crop_wrapper(self, img, label):
-        # explicitly renaming the variables to avoid confusion
-        img = tf.py_function(self.center_crop, img, tf.float32)
-        return img, label
-
-    def pre_process(self, labeled_ds):
-        """
-        Center crop the dataset
-        :param labeled_ds:
-        :return:
-        """
-        ds = labeled_ds.map(self.center_crop_wrapper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        return ds

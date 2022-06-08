@@ -51,7 +51,7 @@ class MISLNet(BaseNet):
         model.add(Flatten())
         fc_layers = 2
         fc_size = 1024
-        for i in range(fc_layers):
+        for _ in range(fc_layers):
             model.add(Dense(fc_size, activation=tf.keras.activations.tanh))
 
         model.add(Dense(num_output, activation=None))

@@ -3,11 +3,8 @@ from pathlib import Path
 
 import tensorflow as tf
 
-tf.config.run_functions_eagerly(True)
-
 import dataset
-from models import (MISLNet, MobileNet, EfficientNet, ResNet, MobileNetContrastive, ResNetContrastive,
-                    EfficientNetB0Contrastive)
+from models import MISLNet, MobileNet, ResNet
 
 
 def none_or_str(value):
@@ -76,11 +73,9 @@ def run_flow():
     else:
         raise ValueError(f'Invalid option {p.dataset_name}')
 
-    distance_matrix = None  # data_factory.get_distance_matrix()
     num_classes = len(data_factory.class_names)
     train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)
-    # filename_ds, val_ds = data_factory.get_tf_val_data(category=p.category)
-    val_ds = None  # validation is being performed in a separate process
+    val_ds = None  # validation is being performed in a separate process (run_evaluate.py)
 
     if p.net_type == 'mobile':
         net = MobileNet(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
@@ -88,14 +83,7 @@ def run_flow():
             net.set_model(p.model_path)
             net.compile()
         else:
-            net.create_model(num_classes, p.height, p.width, distance_matrix, p.model_name, p.use_pretrained)
-
-    elif p.net_type == 'effv2':
-        net = EfficientNet(num_batches, p.global_results_dir, p.const_type)
-        net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.compile()
+            net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
 
     elif p.net_type == 'misl':
         net = MISLNet(num_batches, p.global_results_dir, p.const_type)
@@ -110,40 +98,6 @@ def run_flow():
         if p.model_path:  # to continue the training
             net.set_model(p.model_path)
             net.compile()
-
-    elif p.net_type == 'mobile_supcon':
-        net = MobileNetContrastive(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-        else:
-            net.create_model(num_classes, p.height, p.width, 'encoder', p.model_name + '_enc', p.use_pretrained)
-            net.print_model_summary()
-            net.train(train_ds=train_ds, val_ds=val_ds, epochs=p.epochs)
-            net.create_model(num_classes, p.height, p.width, 'classifier', p.model_name, p.use_pretrained)
-
-    elif p.net_type == 'resnet_supcon':
-        net = ResNetContrastive(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.encoder = tf.keras.Model(net.model.input, net.model.layers[-2].output)
-            net.create_model(num_classes, p.height, p.width, 'classifier', p.model_name, p.use_pretrained)
-        else:
-            net.create_model(num_classes, p.height, p.width, 'encoder', p.model_name + '_enc', p.use_pretrained)
-            net.print_model_summary()
-            net.train(train_ds=train_ds, val_ds=val_ds, epochs=p.epochs)
-            net.create_model(num_classes, p.height, p.width, 'classifier', p.model_name, p.use_pretrained)
-
-    elif p.net_type == 'eff_supcon':
-        net = EfficientNetB0Contrastive(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.encoder = tf.keras.Model(net.model.input, net.model.layers[-2].output)
-            net.create_model(num_classes, p.height, p.width, 'classifier', p.model_name, p.use_pretrained)
-        else:
-            net.create_model(num_classes, p.height, p.width, 'encoder', p.model_name + '_enc', p.use_pretrained)
-            net.print_model_summary()
-            net.train(train_ds=train_ds, val_ds=val_ds, epochs=p.epochs)
-            net.create_model(num_classes, p.height, p.width, 'classifier', p.model_name, p.use_pretrained)
 
     else:
         raise ValueError('Invalid net type')
