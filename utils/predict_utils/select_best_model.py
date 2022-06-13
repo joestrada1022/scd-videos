@@ -3,14 +3,13 @@ import shutil
 from pathlib import Path
 
 
-def select_best_model(video_level_summary_file, replace_string=None):
+def select_best_model(video_level_summary_file):
     """
     Select the best epoch with maximum validation accuracy.
     Ties are resolved by choosing the model with the least validation loss.
     Further, ties are resolved by choosing the earliest such epoch.
 
     :param video_level_summary_file:
-    :param replace_string:
     :return:
     """
 
@@ -37,7 +36,6 @@ def select_best_model(video_level_summary_file, replace_string=None):
     # Copy the model corresponding to the best epoch for predictions on the test set
     model_path = video_level_summary_file.parent.parent.parent.joinpath(f'{eval_models[index]}.h5')
     tmp = list(model_path.parts)[:-1]
-    # tmp[-4] = replace_string
     tmp[-4] += '_pred'
     dest_path = Path('/'.join(tmp))
     dest_path.mkdir(exist_ok=True, parents=True)

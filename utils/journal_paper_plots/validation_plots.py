@@ -1,5 +1,4 @@
 import argparse
-import shutil
 from pathlib import Path
 
 from matplotlib import pyplot as plt
@@ -66,37 +65,18 @@ def make_combined_plots_horizontal(plots):
             color = axs[1].lines[-1].get_color()
             axs[1].scatter(index + 1, test_loss[index], color=color, s=12)
 
-    # plt.suptitle('Epoch-wise accuracy and loss on the test set')
-
-    # axs[0].set_xlabel('epochs')
     axs[0].set_ylabel('Validation  accuracy')
-    # axs[0].set_ylim([0.20, 0.70])
-    # axs[0].set_xlim([0, 20])
-
     axs[1].set_xlabel('epochs')
     axs[1].set_ylabel('Validation  loss')
     axs[1].set_yscale('log')
-    # axs[1].set_ylim([0.20, 0.37])
     axs[1].set_xlim([0, 41])
 
     plt.subplots_adjust(wspace=0.05, hspace=0.08)
 
-    # plt.xlabel('epochs')
-
-    # axes = plt.gca()
-    # plt.ylabel('accuracy')
-    # axes.set_ylim([0.40, 0.74])
-
-    # plt.title('Epoch-wise loss on test data')
-    # plt.ylabel('loss')
-    # axes.set_ylim([0.218, 0.31])
-
-    # axs[1].legend(loc='upper right')
     axs[0].grid(linewidth=0.2, axis='x', linestyle='--')
     axs[1].grid(linewidth=0.2, axis='x', linestyle='--')
 
     plt.legend(bbox_to_anchor=(0.98, 1.45), loc='upper right', borderaxespad=0., framealpha=0.95)
-    # plt.tight_layout()
 
     plt.show()
     plt.cla()
@@ -108,9 +88,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--val_summary', type=Path, help='Path to validation summary')
     args = parser.parse_args()
-
-    # plot_data = {'MobileNet - Constrained': args.val_summary}
-    # make_combined_plots_horizontal(plot_data)
 
     plot_data = {
         'MobileNet (VISION)': Path(

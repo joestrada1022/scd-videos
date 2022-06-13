@@ -47,60 +47,6 @@ def get_model_level_accuracy_vision(true_labels, pred_labels):
     return accuracy
 
 
-def get_stabilized_videos_accuracy_vision(true_labels, pred_labels):
-    devices = [('D01_Samsung_GalaxyS3Mini', False),
-               ('D02_Apple_iPhone4s', True),
-               ('D03_Huawei_P9', False),
-               ('D04_LG_D290', False),
-               ('D05_Apple_iPhone5c', True),
-               ('D06_Apple_iPhone6', True),
-               ('D07_Lenovo_P70A', False),
-               ('D08_Samsung_GalaxyTab3', False),
-               ('D09_Apple_iPhone4', False),
-               ('D10_Apple_iPhone4s', True),
-               ('D11_Samsung_GalaxyS3', False),
-               ('D12_Sony_XperiaZ1Compact', True),
-               ('D14_Apple_iPhone5c', True),
-               ('D15_Apple_iPhone6', True),
-               ('D16_Huawei_P9Lite', False),
-               ('D18_Apple_iPhone5c', True),
-               ('D19_Apple_iPhone6Plus', True),
-               ('D24_Xiaomi_RedmiNote3', False),
-               ('D25_OnePlus_A3000', True),
-               ('D26_Samsung_GalaxyS3Mini', False),
-               ('D27_Samsung_GalaxyS5', False),
-               ('D28_Huawei_P8', False),
-               ('D29_Apple_iPhone5', True),
-               ('D30_Huawei_Honor5c', False),
-               ('D31_Samsung_GalaxyS4Mini', False),
-               ('D32_OnePlus_A3003', True),
-               ('D33_Huawei_Ascend', False),
-               ('D34_Apple_iPhone5', True)
-               ]
-    stabilized_videos = {idx for idx, x in enumerate(devices) if x[1]}
-
-    ground_truths = pd.Series(true_labels, copy=True)
-    predictions = pd.Series(pred_labels, copy=True)
-
-    stabilized_gt = []
-    stabilized_pr = []
-    non_stabilized_gt = []
-    non_stabilized_pr = []
-
-    for index, (tr, pr) in enumerate(zip(true_labels, pred_labels)):
-        if tr in stabilized_videos:
-            stabilized_gt.append(tr)
-            stabilized_pr.append(pr)
-        else:
-            non_stabilized_gt.append(tr)
-            non_stabilized_pr.append(pr)
-
-    from sklearn.metrics import accuracy_score
-    stabilized_acc = accuracy_score(stabilized_gt, stabilized_pr)
-    non_stabilized_acc = accuracy_score(non_stabilized_gt, non_stabilized_pr)
-    return stabilized_acc
-
-
 def get_model_level_accuracy_qufvd(true_labels, pred_labels):
     print(' ')
     gt = true_labels // 2
@@ -159,17 +105,15 @@ def create_cm_normalized(input_file, class_names, scenario=None, platform=None):
     sn.set(font_scale=1.7)  # for label size
 
     # From the sklearn documentation (plot example)
-    # Note: possible divison by zero error
+    # Note: possible division by zero error
     norm_cm = cm_matrix.astype('float') / cm_matrix.sum(axis=1)[:, np.newaxis]
     # Round to 2 decimals
     norm_cm = np.around(norm_cm, 2)
 
     df_cm = pd.DataFrame(norm_cm, class_names, class_names)
-    ax = sn.heatmap(df_cm, annot=False, square=True, cmap="YlGnBu",
-                    cbar_kws={'label': colorbar_lbl},
-                    vmin=0, vmax=1)
-    # bottom, top = ax.get_ylim()
-    # ax.set_ylim(bottom + 0.5, top - 0.5)
+    sn.heatmap(df_cm, annot=False, square=True, cmap="YlGnBu",
+               cbar_kws={'label': colorbar_lbl},
+               vmin=0, vmax=1)
     plt.yticks(rotation=0)
     plt.title(title, pad=30, fontsize=30)
     plt.ylabel('True Class', labelpad=10)
@@ -183,10 +127,18 @@ def create_cm_normalized(input_file, class_names, scenario=None, platform=None):
 
 
 if __name__ == '__main__':
+    # QUFVD data set
     create_cm_normalized(
         input_file=r'/scratch/p288722/runtime_data/scd_videos_first_revision/14_qufvd/all_frames_pred/mobile_net/'
                    r'models/MobileNet_all_I_frames_ccrop_run1/predictions_all_frames/videos/'
                    r'fm-e00020_V_predictions.csv',
         class_names=list(range(1, 21)),
-        scenario=None
+        scenario=None,
+        platform=None,
     )
+
+    # VISION data set
+    # The code needs to be adapted for getting the confusion matrix on the VISION data set
+    # Check the commented out lines of code in create_cm_normalized(...)
+    # Populate scenario and platform arguments as appropriate
+
