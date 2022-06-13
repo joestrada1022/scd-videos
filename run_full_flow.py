@@ -2,17 +2,17 @@
 This file is used to run several scripts to run the train, validation, and test flows.
 These scripts could be optionally be run from the command line with appropriate command line arguments.
 """
-from .run_evaluate import run_evaluate_flow
-from .run_train import run_train_flow
-from .utils.predict_utils.select_best_model import select_best_model
+from run_evaluate import run_evaluate_flow
+from run_train import run_train_flow
+from utils.predict_utils.select_best_model import select_best_model
 
 
 def run_full_flow():
     # Set up the arguments
     num_frames = 50
-    net = "mobile"
-    const_type = "None"
-    category = "None"
+    net = 'mobile'
+    const_type = None
+    category = 'None'
 
     model_name = ''
     if net == 'mobile':
@@ -43,11 +43,15 @@ def run_full_flow():
                       '--height', '480',  # center crop dimensions
                       '--width', '800',  # center crop dimensions
                       '--all_I_frames_dir', all_I_frames_dir]  # change to all_frames_dir if using that
-    results_dir = '.'  # add the absolute path to the results dir
+
+    # add the absolute path to the results dir
+    results_dir = r'/scratch/p288722/runtime_data/scd_videos_first_revision/test_full_flow'
 
     # Step 1 - Run train
     args = ['--category', category, '--net_type', net, '--epochs', '20', '--lr', '0.1', '--batch_size', '32',
-            '--use_pretrained', '1', '--gpu_id', '0', '--const_type', const_type, '--model_name', model_name,
+            '--use_pretrained', '1', '--gpu_id', '0',
+            '--const_type', const_type,
+            '--model_name', model_name,
             '--global_results_dir', results_dir]
     run_train_flow(dataset_params + args)
 

@@ -130,7 +130,7 @@ there are models available in the input directory. Lastly, these files are used 
 5. `utils/predict_utils/frame_prediction_visualization.py` to visualize frame prediction results.
 6. `utils/predict_utils/video_prediction_visualization.py` to visualize video prediction results.
 
-A sample SLURM jobscript file to train/evaluate the ConvNet can be found in `utils/slurm_jobscript.sh`.
+> A sample SLURM jobscript file to train/evaluate the ConvNet can be found in `utils/slurm_jobscript.sh`.
 
 ### Citation   
 ```

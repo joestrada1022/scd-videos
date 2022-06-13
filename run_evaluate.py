@@ -90,7 +90,7 @@ def parse_args(args=None):
     parser.add_argument('--suffix', type=str, help='enter suffix string for the predictions folder')
     parser.add_argument('--gpu_id', type=int, default=None, help='Choose the available GPU devices')
 
-    if not args:
+    if args:
         p = parser.parse_args(args)  # read from custom input
     else:
         p = parser.parse_args()  # read from command line

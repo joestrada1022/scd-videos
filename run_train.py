@@ -34,7 +34,8 @@ def parse_args(args=None):
     parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube", "None"])
 
     # ConvNet params
-    parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type', choices=['derrick'])
+    parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type',
+                        choices=['derrick', 'None', None])
     parser.add_argument('--model_name', type=str, help='Name for the model')
     parser.add_argument('--use_pretrained', type=none_or_bool, default=True, help='Use pretrained net from ImageNet')
     parser.add_argument('--model_path', type=str, help='Path to model to continue training (*.h5)')
@@ -51,7 +52,7 @@ def parse_args(args=None):
     parser.add_argument('--gpu_id', type=int, default=None, help='Choose the available GPU devices')
     parser.add_argument('--global_results_dir', type=Path, required=True, help='Path to results dir')
 
-    if not args:
+    if args:
         p = parser.parse_args(args)  # read from custom input
     else:
         p = parser.parse_args()  # read from command line

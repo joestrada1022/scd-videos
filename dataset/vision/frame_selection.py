@@ -56,7 +56,7 @@ def get_frames_dataset(split, args):
     :param args:
     :return:
     """
-    video_level_split = Path(f'split/{split}_videos.json')
+    video_level_split = Path(__file__).parent.joinpath(f'split/{split}_videos.json')
     with open(video_level_split) as f:
         videos_per_device = json.load(f)
 

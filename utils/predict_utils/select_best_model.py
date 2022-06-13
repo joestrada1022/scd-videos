@@ -7,7 +7,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--val_summary', type=Path, required=True, help='Path to validation summary')
 
-    if not args:
+    if args:
         p = parser.parse_args(args)  # read from custom input
     else:
         p = parser.parse_args()  # read from command line
