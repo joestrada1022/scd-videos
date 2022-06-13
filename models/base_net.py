@@ -9,16 +9,11 @@ from utils.callbacks import WarmUpCosineDecayScheduler
 
 
 class BaseNet(abc.ABC):
-    def __init__(self, num_batches, global_results_dir, const_type=None, model_path=None, lr=0.1):
-        self.num_batches = num_batches
+    def __init__(self, global_results_dir, model_name, const_type=None, lr=0.1):
         self.model = None
-        self.model_path = None
-        if model_path is not None:
-            self.set_model(model_path)
         self.lr = lr
-
-        self.verbose = False
-        self.model_name = None
+        self.model_path = None
+        self.model_name = model_name
 
         # Constrained layer properties
         self.const_type = const_type
@@ -115,7 +110,7 @@ class BaseNet(abc.ABC):
                        initial_epoch=initial_epoch,
                        validation_data=val_ds,
                        callbacks=callbacks,
-                       workers=12,  # fixme --> something like autotune
+                       workers=12,
                        use_multiprocessing=True)
 
     def get_callbacks(self, train_ds, epochs, completed_epochs):

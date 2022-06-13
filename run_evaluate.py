@@ -117,11 +117,15 @@ def run_flow():
         data_factory = dataset.vision.DataFactory(p)
     elif p.dataset_name == 'qufvd':
         data_factory = dataset.qufvd.DataFactory(p)
+    else:
+        raise ValueError(f'Invalid option {p.dataset_name}')
 
     if p.eval_set == 'val':
         filename_ds, eval_ds = data_factory.get_tf_val_data(category=p.category)
     elif p.eval_set == 'test':
         filename_ds, eval_ds = data_factory.get_tf_test_data(category=p.category)
+    else:
+        raise ValueError(f'Invalid option {p.eval_set}')
 
     # List containing only the file names of items in evaluation set
     onehot_ground_truths = data_factory.get_labels(eval_ds)
@@ -131,22 +135,20 @@ def run_flow():
         frame_predictor = FramePredictor(model_dir=p.input_dir, model_file_name=model_file, result_dir=frames_res_dir)
         video_predictor = VideoPredictor(model_file_name=model_file, result_dir=videos_res_dir,
                                          dataset_name=p.dataset_name)
-
         frames_results = Path(frame_predictor.get_output_file())
         videos_results = Path(video_predictor.get_output_file())
+        if frames_results.exists() and videos_results.exists():
+            continue
 
-        if not (frames_results.exists() and videos_results.exists()):
-            print(f"{model_file} | Start prediction process")
-
-            if not frames_results.exists():
-                print(f"{model_file} | Start predicting frames")
-                frame_predictor.start(eval_ds, eval_ds_filepaths, onehot_ground_truths)
-                print(f"{model_file} | Predicting frames completed")
-
-            if not videos_results.exists():
-                print(f"{model_file} | Start predicting videos")
-                video_predictor.start(frame_prediction_file=str(frames_results))
-                print(f"{model_file} | Predicting videos completed")
+        print(f"{model_file} | Start prediction process")
+        if not frames_results.exists():
+            print(f"{model_file} | Start predicting frames")
+            frame_predictor.start(eval_ds, eval_ds_filepaths, onehot_ground_truths)
+            print(f"{model_file} | Predicting frames completed")
+        if not videos_results.exists():
+            print(f"{model_file} | Start predicting videos")
+            video_predictor.start(frame_prediction_file=str(frames_results))
+            print(f"{model_file} | Predicting videos completed")
 
     print(f"Creating Statistics and Visualizations ...")
     # Create Frame Prediction Statistics

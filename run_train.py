@@ -73,33 +73,24 @@ def run_flow():
         raise ValueError(f'Invalid option {p.dataset_name}')
 
     num_classes = len(data_factory.class_names)
-    train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)
-    val_ds = None  # validation is being performed in a separate process (run_evaluate.py)
+    train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)  # fixme: remove num_batches
+    val_ds = None  # validation is being performed in a separate script (run_evaluate.py)
 
     if p.net_type == 'mobile':
-        net = MobileNet(num_batches, p.global_results_dir, p.const_type, lr=p.lr)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.compile()
-        else:
-            net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
-
-    elif p.net_type == 'misl':
-        net = MISLNet(num_batches, p.global_results_dir, p.const_type)
-        net.create_model(num_classes, p.height, p.width, p.model_name)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.compile()
-
-    elif p.net_type == 'res':
-        net = ResNet(num_batches, p.global_results_dir, p.const_type)
+        net = MobileNet(p.global_results_dir, p.model_name, p.const_type, p.lr)
         net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
-        if p.model_path:  # to continue the training
-            net.set_model(p.model_path)
-            net.compile()
-
+    elif p.net_type == 'misl':
+        net = MISLNet(p.global_results_dir, p.model_name, p.const_type, p.lr)
+        net.create_model(num_classes, p.height, p.width)
+    elif p.net_type == 'res':
+        net = ResNet(p.global_results_dir, p.model_name, p.const_type, p.lr)
+        net.create_model(num_classes, p.height, p.width, p.use_pretrained)
     else:
         raise ValueError('Invalid net type')
+
+    if p.model_path:  # to continue the training
+        net.set_model(p.model_path)
+        net.compile()
 
     net.print_model_summary()
     net.train(train_ds=train_ds, val_ds=val_ds, epochs=p.epochs)

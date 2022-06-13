@@ -22,7 +22,7 @@ def parse_args():
                         help='Specify device ID [0, 27], to extract frames from the videos of a specific device. '
                              'This can be used for instance to spawn multiple processes, where each process could'
                              'specify a unique device ID.')
-    parser.add_argument('--frame_type', type=str, default='I-frames', choices=['I-frames', 'all-frames'])
+    parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
     args = parser.parse_args()
 
     assert args.input_dir.exists(), 'Input directory does not exists!'
@@ -68,11 +68,11 @@ def extract_frames_from_a_video(video, dest_device_dir, frame_type):
 
     :param video: Path to the video file
     :param dest_device_dir: Path to the destination directory corresponding to the video's source camera device
-    :param frame_type: A string indicating the type of frames to extract ['I-frames', 'all-frames']
+    :param frame_type: A string indicating the type of frames to extract ['I', 'all']
     :return: None
     """
-
-    if frame_type == 'I-frames':
+    frame_ids = None
+    if frame_type == 'I':
         # load the ffmpeg module on the Peregrine
         # subprocess.run('module load FFmpeg/4.2.2-GCCcore-9.3.0', shell=True, capture_output=True)
 
@@ -98,7 +98,7 @@ def extract_frames_from_a_video(video, dest_device_dir, frame_type):
         ret, frame = cap.read()  # Extract the frame
         if ret:  # Frame is available
             frame_id = str(int(cap.get(1))).zfill(5)  # Get current frame id
-            if frame_type == 'I-frames' and frame_id not in frame_ids:
+            if frame_type == 'I' and frame_id not in frame_ids:
                 continue
             frame_path = dest_frames_dir.joinpath(f"{video.stem}-{frame_id}.png")
             if not Path(frame_path).exists():

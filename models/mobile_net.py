@@ -2,27 +2,26 @@ from pathlib import Path
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
+from tensorflow.keras.applications import MobileNetV3Small
 from tensorflow.keras.layers import Conv2D
 
 from . import BaseNet, Constrained3DKernelMinimal
 
 
 class MobileNet(BaseNet):
-    def __init__(self, num_batches, global_results_dir, const_type, model_path=None, lr=0.1):
-        super().__init__(num_batches, global_results_dir, const_type, model_path, lr)
-        assert const_type in {None, 'guru', 'derrick'}
+    def __init__(self, global_results_dir, model_name, const_type, lr):
+        super().__init__(global_results_dir, model_name, const_type, lr)
         self.const_type = const_type
 
-    def create_model(self, num_outputs, height, width, model_name=None, use_pretrained=True):
-        self.model_name = model_name  # fixme: This should ideally be in the __init__
-        input_shape = (height, width, 3)
+    def create_model(self, num_classes, height, width, use_pretrained=True):
 
-        self.model = tf.keras.applications.MobileNetV3Small(input_shape=input_shape, include_top=True,
-                                                            weights=None, classes=num_outputs,
-                                                            include_preprocessing=False)
+        input_shape = (height, width, 3)
+        self.model = MobileNetV3Small(input_shape=input_shape, include_top=True,
+                                      weights=None, classes=num_classes,
+                                      include_preprocessing=False)
         if use_pretrained:
-            pretrained = tf.keras.applications.MobileNetV3Small(input_shape=input_shape, include_top=False,
-                                                                weights='imagenet', include_preprocessing=False)
+            pretrained = MobileNetV3Small(input_shape=input_shape, include_top=False,
+                                          weights='imagenet', include_preprocessing=False)
             for idx in range(len(pretrained.layers)):
                 self.model.layers[idx].set_weights(pretrained.layers[idx].get_weights())
 
@@ -41,7 +40,5 @@ class MobileNet(BaseNet):
 
 
 if __name__ == '__main__':
-    net = MobileNet(num_batches=10, global_results_dir=Path('.'), const_type=None, model_path=None)
-    m = net.create_model(num_outputs=28, height=480, width=800, class_names=None, model_name=None, use_pretrained=True)
-
-    print(' ')
+    net = MobileNet(global_results_dir=Path('.'), model_name='MobileNet', const_type=None, lr=0.1)
+    m = net.create_model(num_classes=28, height=480, width=800, use_pretrained=True)

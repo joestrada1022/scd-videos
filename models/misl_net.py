@@ -6,10 +6,10 @@ from . import BaseNet, Constrained3DKernelMinimal
 
 
 class MISLNet(BaseNet):
-    def __init__(self, num_batches, global_results_dir, const_type, model_path=None):
-        super().__init__(num_batches, global_results_dir, const_type, model_path)
+    def __init__(self, global_results_dir, model_name, const_type, lr):
+        super().__init__(global_results_dir, model_name, const_type, lr)
 
-    def create_model(self, num_output, height=480, width=800, model_name=None):
+    def create_model(self, num_classes, height, width):
 
         input_shape = (height, width, 3)
         model = Sequential()
@@ -54,10 +54,9 @@ class MISLNet(BaseNet):
         for _ in range(fc_layers):
             model.add(Dense(fc_size, activation=tf.keras.activations.tanh))
 
-        model.add(Dense(num_output, activation=None))
+        model.add(Dense(num_classes, activation=None))
         model.add(Softmax())
 
         self.model = model
-        self.model_name = model_name
         self.compile()
         return model

@@ -50,11 +50,11 @@ def count_num_scenarios_per_device(root_dir):
     for device in devices_count_dict:
         lines.append(device.name + ',' + ','.join(
             [str(devices_count_dict[device][x]) for x in devices_count_dict[device]]) + '\n')
-    with open(r'/scratch/p288722/datasets/vision/videos_stats.csv', 'w+') as f:
+    with open(r'videos_stats.csv', 'w+') as f:
         f.writelines(lines)
 
 
 if __name__ == '__main__':
-    count_num_scenarios_per_device(
-        root_dir=Path(r'/scratch/p288722/datasets/vision/all_frames')
-    )
+    path_to_root_dir_of_video_frames = Path(r'')  # update this field
+    assert path_to_root_dir_of_video_frames.exists(), 'The input path to dataset with frames does not exists'
+    count_num_scenarios_per_device(path_to_root_dir_of_video_frames)

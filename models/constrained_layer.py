@@ -3,60 +3,6 @@ import tensorflow as tf
 from tensorflow.keras.constraints import Constraint
 
 
-class CombineInputsWithConstraints(tf.keras.layers.Layer):
-    def __init__(self, kernel_size=5,
-                 min_threshold=0.005,
-                 max_threshold=0.02, **kwargs):
-        kwargs['name'] = 'combine_inputs_with_constraints'
-        kwargs['trainable'] = False
-
-        super(CombineInputsWithConstraints, self).__init__(**kwargs)
-        self.kernel_size = kernel_size
-        self.min_threshold = min_threshold
-        self.max_threshold = max_threshold
-
-    def build(self, input_shape):
-        self.p = self.kernel_size // 2  # inner padding
-        _, self.img_height, self.img_width, self.num_channels = input_shape
-
-    def call(self, cnn_inputs, constrained_activations):
-        """
-        This method is being implemented assuming that the input tensor dimensions correspond to:
-        batch_size x height x width x num_channels
-        :param cnn_inputs: inputs to the CNN
-        :param constrained_activations: constrained net outputs
-        :return:
-        """
-
-        k = self.kernel_size
-        patches = tf.image.extract_patches(cnn_inputs, [1, k, k, 1], [1, 1, 1, 1], [1, 1, 1, 1], 'VALID')
-        p = tf.reshape(patches, shape=(
-            -1, self.img_height - 2 * self.p, self.img_width - 2 * self.p, k, k, self.num_channels))
-        std_dev = tf.math.reduce_std(p, axis=[3, 4])
-        homo_mask = tf.reduce_prod(tf.multiply(tf.cast(std_dev >= self.min_threshold, tf.float32),
-                                               tf.cast(std_dev <= self.max_threshold, tf.float32)), axis=3)
-        homo_mask = tf.stack([homo_mask] * 3, axis=3)
-        non_homo_mask = tf.ones_like(homo_mask) - homo_mask
-
-        valid_inputs = cnn_inputs[:, self.p:-self.p, self.p:-self.p, :]
-        min_val = tf.reduce_min(constrained_activations, axis=[1, 2, 3], keepdims=True)
-        max_val = tf.reduce_max(constrained_activations, axis=[1, 2, 3], keepdims=True)
-        min_max_activations = (constrained_activations - min_val) / (max_val - min_val)
-
-        pre_precessed_output = tf.multiply(homo_mask, valid_inputs) + tf.multiply(non_homo_mask, min_max_activations)
-
-        return pre_precessed_output
-
-    def get_config(self):
-        config = super().get_config().copy()
-        config.update({
-            'kernel_size': self.kernel_size,
-            'min_threshold': self.min_threshold,
-            'max_threshold': self.max_threshold,
-        })
-        return config
-
-
 class Constrained3DKernelMinimal(Constraint):
     def __init__(self, const_type='derrick'):
         super(Constrained3DKernelMinimal, self).__init__()
