@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=effv2
+#SBATCH --job-name=res
 #SBATCH --time=24:00:00
 #SBATCH --mem=60g
 #SBATCH --partition=gpu
@@ -25,25 +25,18 @@ base_dir=$(pwd)
 all_I_frames_dir="/data/p288722/datasets/vision/all_I_frames"
 all_frames_dir="/data/p288722/datasets/vision/all_frames"
 
-net="effv2"
+net="res"
 const_type="None"
 category="None"
 
 case ${net} in
 "mobile") model_name="MobileNet_${num_frames}_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
-#"eff") model_name="EfficientNet_${num_frames}_0_255_ft_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
-"effv2") model_name="EfficientNet_${num_frames}_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
-#"eff") model_name="EfficientNet_${num_frames}_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
 "misl") model_name="MISLNet_${num_frames}_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
 "res") model_name="ResNet_${num_frames}_I_frames_run${SLURM_ARRAY_TASK_ID}" ;;
-"mobile_supcon") model_name="MobileNet_ft" ;;
-"resnet_supcon") model_name="ResNet_ft" ;;
-"eff_supcon") model_name="EfficientNet_ft" ;;
 *) exit 1 ;;
 esac
 case ${const_type} in
 "derrick") model_name="${model_name}_Const" ;;
-"guru") model_name="${model_name}_Const_Pos" ;;
 "None") ;;
 *) exit 1 ;;
 esac
@@ -58,12 +51,6 @@ lscpu
 nvidia-smi
 
 dataset_params="--dataset_name=vision --frame_selection=equally_spaced --frame_type=I --fpv=50 --height=480 --width=800 --all_I_frames_dir=${all_I_frames_dir} --all_frames_dir=${all_frames_dir}"
-#dataset_params="--dataset_name=vision --frame_selection=equally_spaced --frame_type=all --fpv=50 --height=256 --width=256 --all_I_frames_dir=${all_I_frames_dir} --all_frames_dir=${all_frames_dir}"
-
-#echo python3 /home/p288722/git_code/scd_videos_first_revision/run_train.py ${dataset_params} --category=${category} --net_type=${net}  --epochs=20 --lr=0.1 --batch_size=64 --use_pretrained=1 --gpu_id=0 --const_type=${const_type} --model_name="${model_name}" --global_results_dir="${base_dir}/${num_frames}_frames/${net}_net"
-#echo python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --eval_set="val" --batch_size=64 --gpu_id=0 --suffix="${num_frames}_frames_val" --input_dir="${base_dir}/${num_frames}_frames/${net}_net/models/${model_name}"
-#echo python3 /home/p288722/git_code/scd_videos_first_revision/utils/predict_utils/select_best_model.py --val_summary="${base_dir}/${num_frames}_frames/${net}_net/models/${model_name}/predictions_${num_frames}_frames_val/videos/V_prediction_stats.csv"
-#echo python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --eval_set="test" --batch_size=64 --gpu_id=0 --suffix="${num_frames}_frames" --input_dir="${base_dir}/${num_frames}_frames_pred/${net}_net/models/${model_name}"
 
 python3 /home/p288722/git_code/scd_videos_first_revision/run_train.py ${dataset_params} --category=${category} --net_type=${net}  --epochs=20 --lr=0.1 --batch_size=32 --use_pretrained=1 --gpu_id=0 --const_type=${const_type} --model_name="${model_name}" --global_results_dir="${base_dir}/${num_frames}_frames/${net}_net"
 python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --eval_set="val" --batch_size=64 --gpu_id=0 --suffix="${num_frames}_frames_val" --input_dir="${base_dir}/${num_frames}_frames/${net}_net/models/${model_name}"
@@ -71,7 +58,6 @@ python3 /home/p288722/git_code/scd_videos_first_revision/utils/predict_utils/sel
 python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --eval_set="test" --batch_size=64 --gpu_id=0 --suffix="${num_frames}_frames" --input_dir="${base_dir}/${num_frames}_frames_pred/${net}_net/models/${model_name}"
 
 #dataset_params="--dataset_name=vision --frame_selection=equally_spaced --frame_type=all --height=480 --width=800 --all_I_frames_dir=${all_I_frames_dir} --all_frames_dir=${all_frames_dir}"
-#
 #python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --fpv=-1 --suffix="all_frames" --eval_set="test" --batch_size=64 --gpu_id=0 --input_dir="${base_dir}/${num_frames}_frames_pred/${net}_net/models/${model_name}"
 #python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --fpv=200 --suffix="200_frames" --eval_set="test" --batch_size=64 --gpu_id=0 --input_dir="${base_dir}/${num_frames}_frames_pred/${net}_net/models/${model_name}"
 #python3 /home/p288722/git_code/scd_videos_first_revision/run_evaluate.py ${dataset_params} --fpv=400 --suffix="400_frames" --eval_set="test" --batch_size=64 --gpu_id=0 --input_dir="${base_dir}/${num_frames}_frames_pred/${net}_net/models/${model_name}"

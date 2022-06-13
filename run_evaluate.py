@@ -58,7 +58,7 @@ def none_or_bool(value):
     return bool(int(value))
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description='Validate the CNNs',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -90,7 +90,10 @@ def parse_args():
     parser.add_argument('--suffix', type=str, help='enter suffix string for the predictions folder')
     parser.add_argument('--gpu_id', type=int, default=None, help='Choose the available GPU devices')
 
-    p = parser.parse_args()
+    if not args:
+        p = parser.parse_args(args)  # read from custom input
+    else:
+        p = parser.parse_args()  # read from command line
 
     if p.gpu_id is not None:
         physical_devices = tf.config.list_physical_devices('GPU')
@@ -101,8 +104,8 @@ def parse_args():
     return p
 
 
-def run_flow():
-    p = parse_args()
+def run_evaluate_flow(args=None):
+    p = parse_args(args)
 
     model_name = p.input_dir.split(os.path.sep)[-1]
     model_files = get_models_files(p.input_dir, p.models)
@@ -170,4 +173,4 @@ def run_flow():
 
 
 if __name__ == "__main__":
-    run_flow()
+    run_evaluate_flow()

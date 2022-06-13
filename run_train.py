@@ -19,7 +19,7 @@ def none_or_bool(value):
     return bool(int(value))
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description='Train the CNNs',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -51,7 +51,10 @@ def parse_args():
     parser.add_argument('--gpu_id', type=int, default=None, help='Choose the available GPU devices')
     parser.add_argument('--global_results_dir', type=Path, required=True, help='Path to results dir')
 
-    p = parser.parse_args()
+    if not args:
+        p = parser.parse_args(args)  # read from custom input
+    else:
+        p = parser.parse_args()  # read from command line
 
     print(f'Using pre-trained model - {p.use_pretrained}')
 
@@ -62,8 +65,8 @@ def parse_args():
     return p
 
 
-def run_flow():
-    p = parse_args()
+def run_train_flow(args=None):
+    p = parse_args(args)
 
     if p.dataset_name == 'vision':
         data_factory = dataset.vision.DataFactory(p)
@@ -97,4 +100,4 @@ def run_flow():
 
 
 if __name__ == "__main__":
-    run_flow()
+    run_train_flow()
