@@ -49,18 +49,18 @@ def run_full_flow():
     results_dir = r'/data/p288722/runtime_data/scd_videos_first_revision/test_full_flow'
     gpu_id = 0  # set the CUDA GPU ID
 
-    # # Step 1 - Run train
-    # args = ['--category', category, '--net_type', net, '--epochs', '20', '--lr', '0.1', '--batch_size', '32',
-    #         '--use_pretrained', '1', '--gpu_id', gpu_id,
-    #         '--const_type', const_type,
-    #         '--model_name', model_name,
-    #         '--global_results_dir', f'{results_dir}/{num_frames}_frames/{net}_net']
-    # run_train_flow(dataset_params + args)
-    #
-    # # Step 2 - Run validation
-    # args = ['--eval_set', 'val', '--batch_size', '64', '--gpu_id', gpu_id, '--suffix', f"{num_frames}_frames_val",
-    #         '--input_dir', f'{results_dir}/{num_frames}_frames/{net}_net/models/{model_name}']
-    # run_evaluate_flow(dataset_params + args)
+    # Step 1 - Run train
+    args = ['--category', category, '--net_type', net, '--epochs', '20', '--lr', '0.1', '--batch_size', '32',
+            '--use_pretrained', '1', '--gpu_id', gpu_id,
+            '--const_type', const_type,
+            '--model_name', model_name,
+            '--global_results_dir', f'{results_dir}/{num_frames}_frames/{net}_net']
+    run_train_flow(dataset_params + args)
+
+    # Step 2 - Run validation
+    args = ['--eval_set', 'val', '--batch_size', '64', '--gpu_id', gpu_id, '--suffix', f"{num_frames}_frames_val",
+            '--input_dir', f'{results_dir}/{num_frames}_frames/{net}_net/models/{model_name}']
+    run_evaluate_flow(dataset_params + args)
 
     # Step 3 - Select the best model based on the results of the validation set
     args = ['--val_summary', f'{results_dir}/{num_frames}_frames/{net}_net/models/{model_name}/'
