@@ -151,10 +151,10 @@ class DataFactory:
         return file_path_ds, labeled_ds
 
     def get_tf_val_data(self, category):
-        return self.get_tf_evaluation_data(category, mode='val')
+        return self.get_tf_evaluation_data(mode='val', category=category)
 
     def get_tf_test_data(self, category):
-        return self.get_tf_evaluation_data(category, mode='test')
+        return self.get_tf_evaluation_data(mode='test', category=category)
 
     @staticmethod
     def get_labels(ds):

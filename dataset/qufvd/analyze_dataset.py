@@ -4,8 +4,7 @@ import tensorflow as tf
 from tqdm import tqdm
 
 
-def classwise_distribution_of_videos():
-    dataset_root = Path(r'/data/p288722/datasets/qufvd/IFrameForEvalution20Class')
+def classwise_distribution_of_videos(dataset_root):
     plt.figure()
     for split in ['Training', 'Validation', 'Testing']:
         devices = dataset_root.joinpath(f'FrameDatabase{split}').glob('*/*')
@@ -29,8 +28,7 @@ def classwise_distribution_of_videos():
     plt.show()
 
 
-def distribution_of_I_frames():
-    dataset_root = Path(r'/data/p288722/datasets/qufvd/IFrameForEvalution20Class')
+def distribution_of_I_frames(dataset_root):
     plt.figure()
     for split, align in zip(['Training', 'Validation', 'Testing'], ['left', 'mid', 'right']):
         devices = dataset_root.joinpath(f'FrameDatabase{split}').glob('*/*')
@@ -52,18 +50,14 @@ def distribution_of_I_frames():
     plt.show()
 
 
-def distribution_of_I_frame_orientation():
-    dataset_root = Path(r'/data/p288722/datasets/qufvd/IFrameForEvalution20Class')
-    from collections import Counter
+def distribution_of_I_frame_orientation(dataset_root):
     plt.figure()
 
-    # distribution = []
     for split in ['Training', 'Validation', 'Testing']:
         filepaths = list(dataset_root.joinpath(f'FrameDatabase{split}').glob('*/*/*'))
 
         img_sizes = [str(tf.image.decode_jpeg(tf.io.read_file(str(x))).get_shape().as_list()) for x in tqdm(filepaths)]
         print(f'Number of {split} images: {len(img_sizes)}')
-        # distribution = Counter(img_sizes)
 
     plt.hist(x=img_sizes, bins=100, label=f'{split}', rwidth=10, stacked=True, log=True)
     # No. train         - 49,029
@@ -78,6 +72,7 @@ def distribution_of_I_frame_orientation():
 
 
 if __name__ == '__main__':
-    classwise_distribution_of_videos()
-    # distribution_of_I_frames()
-    # distribution_of_I_frame_orientation()
+    dataset_path = Path(r'/data/p288722/datasets/qufvd/IFrameForEvalution20Class')
+    classwise_distribution_of_videos(dataset_path)
+    distribution_of_I_frames(dataset_path)
+    distribution_of_I_frame_orientation(dataset_path)

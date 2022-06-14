@@ -596,8 +596,6 @@ class VideoPredictionVis:
         norm_cm = cm_matrix.astype('float') / cm_matrix.sum(axis=1)[:, np.newaxis]
         # Round to 2 decimals
         norm_cm = np.around(norm_cm, 2)
-
-        # df_cm = pd.DataFrame(norm_cm, [], [])
         ax = sn.heatmap(norm_cm, annot=False, square=True, xticklabels=False, yticklabels=False, cmap="YlGnBu",
                         cbar_kws={'label': color_bar_lbl, "shrink": .7}, vmin=0,
                         vmax=1)

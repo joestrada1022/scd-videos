@@ -6,10 +6,10 @@ from .video_prediction_statistics import VideoPredictionStatistics
 from .video_prediction_visualization import VideoPredictionVis
 
 __all__ = (
-    FramePredictionStatistics,
-    FramePredictionVis,
-    FramePredictor,
-    VideoPredictor,
-    VideoPredictionStatistics,
-    VideoPredictionVis,
+    'FramePredictionStatistics',
+    'FramePredictionVis',
+    'FramePredictor',
+    'VideoPredictor',
+    'VideoPredictionStatistics',
+    'VideoPredictionVis',
 )
