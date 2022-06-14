@@ -141,4 +141,3 @@ if __name__ == '__main__':
     # The code needs to be adapted for getting the confusion matrix on the VISION data set
     # Check the commented out lines of code in create_cm_normalized(...)
     # Populate scenario and platform arguments as appropriate
-

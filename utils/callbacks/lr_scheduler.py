@@ -1,8 +1,8 @@
-import tensorflow.keras.backend as K
 import numpy as np
+import tensorflow.keras.backend as K
+from tensorflow import keras
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
-from tensorflow import keras
 
 
 class WarmUpCosineDecayScheduler(keras.callbacks.Callback):

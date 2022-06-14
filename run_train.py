@@ -8,13 +8,13 @@ from models import MISLNet, MobileNet, ResNet
 
 
 def none_or_str(value):
-    if value == 'None':
+    if value is None or value == 'None':
         return None
     return str(value)
 
 
 def none_or_bool(value):
-    if value == 'None':
+    if value is None or value == 'None':
         return None
     return bool(int(value))
 
@@ -31,7 +31,7 @@ def parse_args(args=None):
     parser.add_argument('--frame_selection', type=str, default='equally_spaced', choices=['equally_spaced', 'first_N'])
     parser.add_argument('--frame_type', type=str, default='I', choices=['I', 'all'])
     parser.add_argument('--fpv', type=int, default=50, help='max number of frames per video (set -1 for all frames)')
-    parser.add_argument('--category', type=str, choices=["native", "whatsapp", "youtube", "None"])
+    parser.add_argument('--category', type=none_or_str, choices=["native", "whatsapp", "youtube", "None", None])
 
     # ConvNet params
     parser.add_argument('--const_type', type=none_or_str, default=None, help='Constraint type',

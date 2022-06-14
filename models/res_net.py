@@ -2,8 +2,8 @@ from pathlib import Path
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.keras.layers import Conv2D
 
 from . import BaseNet, Constrained3DKernelMinimal
 

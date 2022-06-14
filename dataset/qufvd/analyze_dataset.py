@@ -1,6 +1,7 @@
 from pathlib import Path
-from matplotlib import pyplot as plt
+
 import tensorflow as tf
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
