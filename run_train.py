@@ -77,12 +77,12 @@ def run_train_flow(args=None):
         raise ValueError(f'Invalid option {p.dataset_name}')
 
     num_classes = len(data_factory.class_names)
-    train_ds, num_batches = data_factory.get_tf_train_data(category=p.category)  # fixme: remove num_batches
+    train_ds = data_factory.get_tf_train_data(category=p.category)
     val_ds = None  # validation is being performed in a separate script (run_evaluate.py)
 
     if p.net_type == 'mobile':
         net = MobileNet(p.global_results_dir, p.model_name, p.const_type, p.lr)
-        net.create_model(num_classes, p.height, p.width, p.model_name, p.use_pretrained)
+        net.create_model(num_classes, p.height, p.width, p.use_pretrained)
     elif p.net_type == 'misl':
         net = MISLNet(p.global_results_dir, p.model_name, p.const_type, p.lr)
         net.create_model(num_classes, p.height, p.width)

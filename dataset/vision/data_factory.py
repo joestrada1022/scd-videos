@@ -1,6 +1,5 @@
 import itertools
 import json
-import math
 import os
 import random
 import time
@@ -12,8 +11,9 @@ from PIL import ImageFile
 
 from .frame_selection import get_frames_dataset
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+tf.config.run_functions_eagerly(True)
 
 
 class DataFactory:
@@ -56,8 +56,7 @@ class DataFactory:
         one_hot_vec = tf.cast(class_name == self.class_names, dtype=tf.dtypes.float32, name="labels")
         return one_hot_vec
 
-    @staticmethod
-    def _load_img(file_path):
+    def _load_img(self, file_path):
         img = tf.io.read_file(file_path)
         try:
             img = tf.image.decode_png(img, channels=3)
@@ -65,7 +64,7 @@ class DataFactory:
             print(f'Issue decoding the png image - {file_path}\n')
             raise e
         img = tf.image.convert_image_dtype(img, tf.dtypes.float32)
-
+        img = tf.py_function(self._center_crop, [img], tf.dtypes.float32)
         return img
 
     def _center_crop(self, img):
@@ -86,20 +85,6 @@ class DataFactory:
                                             target_width=crop_width)
         return img
 
-    def _center_crop_wrapper(self, img, label):
-        # explicitly renaming the variables to avoid confusion
-        img = tf.py_function(self._center_crop, img, tf.float32)
-        return img, label
-
-    def _pre_process(self, labeled_ds):
-        """
-        Center crop the dataset
-        :param labeled_ds:
-        :return:
-        """
-        ds = labeled_ds.map(self._center_crop_wrapper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        return ds
-
     def get_tf_train_data(self, category):
         t_start = time.time()
         file_path_ds = tf.data.Dataset.from_tensor_slices(self.train_data)
@@ -117,8 +102,7 @@ class DataFactory:
         print(f"Found {len(list(file_path_ds))} images in ({int(time.time() - t_start)} sec.)")
 
         # Load actual images and create labels accordingly
-        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        labeled_ds = self._pre_process(labeled_ds)
+        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.AUTOTUNE)
 
         print(f"\nFinished creating labeled dataset ({int(time.time() - t_start)} sec.)\n")
 
@@ -128,12 +112,11 @@ class DataFactory:
 
         # Set batch and prefetch preferences
         labeled_ds = labeled_ds.batch(self.batch_size, drop_remainder=False)
-        labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.AUTOTUNE)
 
-        num_batches = math.ceil(num_elements / self.batch_size)
-        return labeled_ds, num_batches
+        return labeled_ds
 
-    def get_tf_evaluation_data(self, category, mode):
+    def get_tf_evaluation_data(self, mode, category):
         t_start = time.time()
 
         if mode == 'test':
@@ -159,11 +142,10 @@ class DataFactory:
         print(f"Found {len(list(file_path_ds))} images in ({int(time.time() - t_start)} sec.)")
 
         # Create labeled dataset by loading the image and estimating the label
-        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        labeled_ds = self._pre_process(labeled_ds)
+        labeled_ds = file_path_ds.map(self._process_path, num_parallel_calls=tf.data.AUTOTUNE)
 
         labeled_ds = labeled_ds.batch(self.batch_size, drop_remainder=False)
-        labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        labeled_ds = labeled_ds.prefetch(buffer_size=tf.data.AUTOTUNE)
         print(f"Finished loading test frames ({int(time.time() - t_start)} sec.)")
 
         return file_path_ds, labeled_ds
