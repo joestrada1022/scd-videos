@@ -54,7 +54,8 @@ class WarmUpCosineDecayScheduler(keras.callbacks.Callback):
                                            warmup_learning_rate=self.warmup_learning_rate,
                                            warmup_steps=self.warmup_steps,
                                            hold_base_rate_steps=self.hold_base_rate_steps)
-        K.set_value(self.model.optimizer.lr, lr)
+        # K.set_value(self.model.optimizer.lr, lr)
+        self.model.optimizer.learning_rate = lr
 
     def on_epoch_end(self, epoch, logs=None):
         if self.verbose > 0:

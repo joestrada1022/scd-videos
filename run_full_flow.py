@@ -5,12 +5,13 @@ These scripts could be optionally be run from the command line with appropriate 
 from run_evaluate import run_evaluate_flow
 from run_train import run_train_flow
 from utils.predict_utils.select_best_model import select_best_model
+import os
 
 # To force eager execution of tf.data functions, please use `tf.data.experimental.enable_debug_mode()`
 
 def run_full_flow():
     # Set up the arguments
-    num_frames = 50
+    num_frames = 12
     net = 'mobile'
     const_type = 'None'
     category = 'None'
@@ -34,10 +35,10 @@ def run_full_flow():
         model_name += '_yt'
 
     # data set params
-    all_I_frames_dir = "/data/p288722/datasets/vision/all_I_frames"  # path to all-frames dir of the vision dataset
+    all_I_frames_dir = "data"  # path to all-frames dir of the vision dataset
     all_frames_dir = "/data/p288722/datasets/vision/all_frames"  # path to I-frames dir of vision or qufvd dataset
 
-    dataset_params = ['--dataset_name', 'vision',  # vision or qufvd
+    dataset_params = ['--dataset_name', 'qufvd',  # vision or qufvd
                       '--frame_selection', 'equally_spaced',
                       '--frame_type', 'I',  # I or all
                       '--fpv', f'{num_frames}',  # number of Frames to use Per Video (fpv)
@@ -46,7 +47,7 @@ def run_full_flow():
                       '--all_I_frames_dir', all_I_frames_dir]  # change to all_frames_dir if using that
 
     # add the absolute path to the results dir
-    results_dir = r'/data/p288722/runtime_data/scd_videos_first_revision/test_full_flow'
+    results_dir = r'results'
     gpu_id = 0  # set the CUDA GPU ID
 
     # Step 1 - Run train

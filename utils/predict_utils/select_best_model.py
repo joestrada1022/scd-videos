@@ -47,7 +47,7 @@ def select_best_model(args=None):
     index = min(best_epoch_indices)
 
     # Copy the model corresponding to the best epoch for predictions on the test set
-    model_path = args.val_summary.parent.parent.parent.joinpath(f'{eval_models[index]}.h5')
+    model_path = args.val_summary.parent.parent.parent.joinpath(f'{eval_models[index]}.keras')
     tmp = list(model_path.parts)[:-1]
     tmp[-4] += '_pred'
     dest_path = Path('/'.join(tmp))

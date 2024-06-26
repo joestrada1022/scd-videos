@@ -109,12 +109,10 @@ class BaseNet(abc.ABC):
                        epochs=epochs,
                        initial_epoch=initial_epoch,
                        validation_data=val_ds,
-                       callbacks=callbacks,
-                       workers=12,
-                       use_multiprocessing=True)
+                       callbacks=callbacks,)
 
     def get_callbacks(self, train_ds, epochs, completed_epochs):
-        default_file_name = "fm-e{epoch:05d}.h5"
+        default_file_name = "fm-e{epoch:05d}.keras"
         save_model_path = self.get_save_model_path(default_file_name)
 
         save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
