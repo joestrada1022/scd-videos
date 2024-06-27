@@ -1,6 +1,10 @@
 # dataset
 data/
 
+# results
+results/**/models
+results/**/tensorboard
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

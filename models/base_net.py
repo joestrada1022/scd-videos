@@ -52,7 +52,7 @@ class BaseNet(abc.ABC):
 
     def compile(self):
         self.model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                           optimizer=tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
+                           optimizer=tf.keras.optimizers.legacy.SGD(learning_rate=self.lr, momentum=0.95, decay=0.0005),
                            metrics=["accuracy"])
 
     def get_tensorboard_path(self):
@@ -115,7 +115,7 @@ class BaseNet(abc.ABC):
         default_file_name = "fm-e{epoch:05d}.keras"
         save_model_path = self.get_save_model_path(default_file_name)
 
-        save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=save_model_path,
+        save_model_cb = tf.keras.callbacks.ModelCheckpoint(filepath=str(save_model_path),
                                                            verbose=0,
                                                            save_weights_only=False,
                                                            save_freq='epoch')

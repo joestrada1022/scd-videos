@@ -5,9 +5,10 @@ These scripts could be optionally be run from the command line with appropriate 
 from run_evaluate import run_evaluate_flow
 from run_train import run_train_flow
 from utils.predict_utils.select_best_model import select_best_model
-import os
+import tensorflow as tf
 
 # To force eager execution of tf.data functions, please use `tf.data.experimental.enable_debug_mode()`
+tf.data.experimental.enable_debug_mode()
 
 def run_full_flow():
     # Set up the arguments

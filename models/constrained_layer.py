@@ -1,8 +1,9 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.constraints import Constraint
+import keras
 
-
+@keras.saving.register_keras_serializable(package='MyLayers', name='Constrained3DKernelMinimal')
 class Constrained3DKernelMinimal(Constraint):
     def __init__(self, const_type='derrick'):
         super(Constrained3DKernelMinimal, self).__init__()
