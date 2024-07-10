@@ -66,6 +66,7 @@ class DataFactory:
             raise e
 
         # Correct image orientation and perform center crop
+        img = tf.image.resize(img, (self.img_height, self.img_width))
         img = tf.image.convert_image_dtype(img, tf.dtypes.float32)
         img = tf.py_function(self._center_crop, [img], tf.dtypes.float32)
         return img

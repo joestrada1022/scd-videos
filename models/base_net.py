@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
-from utils.callbacks import WarmUpCosineDecayScheduler
+from ..utils.callbacks import WarmUpCosineDecayScheduler
 
 
 class BaseNet(abc.ABC):

@@ -43,8 +43,8 @@ def run_full_flow():
                       '--frame_selection', 'equally_spaced',
                       '--frame_type', 'I',  # I or all
                       '--fpv', f'{num_frames}',  # number of Frames to use Per Video (fpv)
-                      '--height', '480',  # center crop dimensions
-                      '--width', '800',  # center crop dimensions
+                      '--height', '360',  # center crop dimensions
+                      '--width', '640',  # center crop dimensions
                       '--all_I_frames_dir', all_I_frames_dir]  # change to all_frames_dir if using that
 
     # add the absolute path to the results dir
