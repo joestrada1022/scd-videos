@@ -37,7 +37,7 @@ def run_full_flow():
 
     # data set params
     all_I_frames_dir = "data"  # path to all-frames dir of the vision dataset
-    all_frames_dir = "/data/p288722/datasets/vision/all_frames"  # path to I-frames dir of vision or qufvd dataset
+    # all_frames_dir = "/data/p288722/datasets/vision/all_frames"  # path to I-frames dir of vision or qufvd dataset
 
     dataset_params = ['--dataset_name', 'qufvd',  # vision or qufvd
                       '--frame_selection', 'equally_spaced',
